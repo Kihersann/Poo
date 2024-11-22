@@ -1,0 +1,23 @@
+class Turno {
+private:
+    int turnoActual; // 1 o 2 (equipo actual)
+
+public:
+    // Constructor
+    Turno() : turnoActual(1) {} // Inicia con el equipo 1
+
+    // Obtener el turno actual
+    int getTurnoActual() const {
+        return turnoActual;
+    }
+
+    // Cambiar de turno
+    void cambiarTurno() {
+        turnoActual = (turnoActual == 1) ? 2 : 1;
+    }
+
+    // Obtener el equipo actual en formato 'X' o 'O'
+    char getEquipoActual() const {
+        return (turnoActual == 1) ? 'X' : 'O';
+    }
+};
