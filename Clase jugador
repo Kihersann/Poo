@@ -1,0 +1,68 @@
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+#include <map>
+using namespace std;
+
+class Jugador {
+private:
+    int nivelVida;
+    string tipoJugador;
+    int alcanceTiro;
+    int alcanceMovimiento;
+    bool rapido;
+    bool experto;
+
+public:
+    
+    Jugador(string tipo, bool esRapido, bool esExperto) {
+        nivelVida = 3;
+        tipoJugador = tipo;
+        rapido = esRapido;
+        experto = esExperto;
+        configurarJugadorAleatorio();
+    }
+
+        // configuracion de disparo segun el tipo de jugador
+        if (tipoJugador == "Novato") {
+            alcanceTiro = 1;
+            estadisticasPunteria = {{"Torso", 1}, {"Extremidades", 0.75}, {"Cabeza", 0.25}};
+        } else if (tipoJugador == "Experto") {
+            alcanceTiro = (rand() % 4 == 0) ? 2 : 1; // 75% probabilidad de 1, 25% de 2
+            estadisticasPunteria = {{"Torso", 0.60}, {"Extremidades", 0.85}, {"Cabeza", 0.05}};
+        }
+        alcanceMovimiento = rapido ? 2 : 1;
+    }
+
+    void mover(string direccion, int pasos) {
+        if (pasos > alcanceMovimiento || pasos <= 0) {
+            cout << "Movimiento no permitido.\n";
+            return;
+        }
+        cout << "El jugador se mueve " << pasos << " casillas hacia " << direccion << ".\n";
+    }
+
+    void atacar(Jugador &objetivo) {
+        float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+        if (probabilidad < estadisticasPunteria["Cabeza"]) {
+            objetivo.nivelVida = 0;
+            cout << "¡Acertaste en la cabeza! El jugador ha sido descalificado.\n";
+        } else if (probabilidad < estadisticasPunteria["Extremidades"]) {
+            objetivo.nivelVida -= 1;
+            cout << "Acertaste en una extremidad. Nivel de vida restante: " << objetivo.nivelVida << ".\n";
+        } else {
+            objetivo.nivelVida -= 3;
+            cout << "Acertaste en el torso. Nivel de vida restante: " << objetivo.nivelVida << ".\n";
+        }
+    }
+
+    int getNivelVida() const {
+        return nivelVida;
+    }
+
+    string getTipoJugador() const {
+        return tipoJugador;
+    }
+};
