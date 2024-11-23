@@ -1,0 +1,53 @@
+class TableroPersonal {
+private:
+    string nombreJugador;
+    int nivelVida;             
+    int impactosExtremidades;  
+    int impactosTorso;         //si es >=1, el jugador queda eliminado
+    int impactosCabeza;        //eliminación automática
+    int eliminaciones;        
+
+public:
+    TableroPersonal(string _nombre)
+        : nombreJugador(_nombre), nivelVida(100), impactosExtremidades(0), impactosTorso(0), impactosCabeza(0), eliminaciones(0) {}
+
+    void registrarImpacto(string tipoImpacto) {
+        if (tipoImpacto == "Cabeza") {
+            impactosCabeza++;
+            nivelVida = 0; // Eliminación inmediata
+            cout << "¡" << nombreJugador << " fue eliminado por un impacto en la cabeza!\n";
+        } else if (tipoImpacto == "Torso") {
+            impactosTorso++;
+            nivelVida = 0; // Eliminación inmediata
+            cout << "¡" << nombreJugador << " fue eliminado por un impacto en el torso!\n";
+        } else if (tipoImpacto == "Extremidades") {
+            impactosExtremidades++;
+            if (impactosExtremidades >= 3) {
+                nivelVida = 0; // Eliminación después de 3 impactos en extremidades
+                cout << "¡" << nombreJugador << " fue eliminado por tres impactos en las extremidades!\n";
+            } else {
+                cout << nombreJugador << " recibió un impacto en las extremidades. Impactos actuales: " << impactosExtremidades << ".\n";
+            }
+        }
+    }
+
+    // Método para registrar una eliminación realizada
+    void registrarEliminacion() {
+        eliminaciones++;
+    }
+
+    // Método para mostrar el estado actual del jugador
+    void mostrarEstado() const {
+        cout << "Estado de " << nombreJugador << ":\n";
+        cout << " - Nivel de vida: " << nivelVida << "\n";
+        cout << " - Impactos en extremidades: " << impactosExtremidades << "\n";
+        cout << " - Impactos en torso: " << impactosTorso << "\n";
+        cout << " - Impactos en cabeza: " << impactosCabeza << "\n";
+        cout << " - Eliminaciones realizadas: " << eliminaciones << "\n";
+    }
+
+    // Método para verificar si el jugador está eliminado
+    bool estaEliminado() const {
+        return nivelVida <= 0;
+    }
+};
