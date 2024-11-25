@@ -10,11 +10,12 @@ class Jugador {
 private:
     int nivelVida;
     string tipoJugador;
+    map<string, float> estadisticasPunteria;
     int alcanceTiro;
     int alcanceMovimiento;
     bool rapido;
     bool experto;
-
+ 
 public:
     
     Jugador(string tipo, bool esRapido, bool esExperto) {
@@ -24,6 +25,27 @@ public:
         experto = esExperto;
         configurarJugadorAleatorio();
     }
+
+    void configurarJugadorAleatorio() {
+        float probabilidad = static_cast<float>(rand()) / RAND_MAX; // numero aleatorio entre 0 y 1
+
+        if (probabilidad < 0.15) {
+            tipoJugador = "Experto"; // experto rapido
+            rapido = true;
+            experto = true;
+        } else if (probabilidad < 0.40) {
+            tipoJugador = "Experto"; // experto lento
+            rapido = false;
+            experto = true;
+        } else if (probabilidad < 0.65) {
+            tipoJugador = "Novato"; // novato rapido
+            rapido = true;
+            experto = false;
+        } else {
+            tipoJugador = "Novato"; // novato lento
+            rapido = false;
+            experto = false;
+        }
 
         // configuracion de disparo segun el tipo de jugador
         if (tipoJugador == "Novato") {
