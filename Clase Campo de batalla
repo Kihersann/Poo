@@ -1,0 +1,99 @@
+// clase para el campo de batalla (o tablero)
+class campoBatalla {
+private:
+    vector<vector<int>> casillas;
+    int filas;
+    int columnas;
+
+public:
+    campoBatalla(int m, int n) {
+        if (m < 3 || m > 10 || n < 4 || n > 10) {
+            throw invalid_argument("El tamaño del tablero debe ser de 3x4 a 10x10.");
+        }
+        filas = m;
+        columnas = n + 2; // aumentamos 2 columnas para las banderas
+        casillas = vector<vector<int>>(filas, vector<int>(columnas, 0));
+    }
+
+    void colocarEquipos(int numJugadores) {
+        // se coloca a un jugador en la columna 1 y la penúltima columna
+        for (int i = 0; i < numJugadores; i++) {
+            casillas[i][1] = 1; // se coloca un jugador en la columna 1 (segunda columna desde la izquierda)
+            casillas[i][columnas - 2] = 1; // se coloca un jugador en la penúltima columna
+        }
+    }
+
+    void colocarBanderas() {
+        // colocar las banderas en la columna 0 y en la ultima columna (columnas 0 y columnas-1)
+        for (int i = 0; i < filas; i++) {
+            casillas[i][0] = 2; // bandera en la columna 0
+            casillas[i][columnas - 1] = 2; // tambien bandera en la última columna
+        }
+    }
+
+    void imprimirTablero() {
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
+                if (casillas[i][j] == 1) {
+                    cout << "[J] "; // representa a un jugador
+                } else if (casillas[i][j] == 2) {
+                    cout << "[B] "; // representa una bandera
+                } else {
+                    cout << "[ ] "; // casilla vacia
+                }
+            }
+            cout << endl;
+        }
+    }
+};
+
+void crearTableroAleatorio()
+{
+    int filas = rand() % 8 + 3;    // aleatorio entre 3 y 10
+    int columnas = rand() % 7 + 4; // aleatorio entre 4 y 10
+
+    campoBatalla tablero(filas, columnas);  // se crea un tablero con dimensiones aleatorias
+    tablero.colocarEquipos(filas); // se colocan jugadores
+    tablero.colocarBanderas();    // se colocan banderas
+    tablero.imprimirTablero();    // mostrar el tablero
+}
+
+void crearTableroEstandar()
+{
+    const int filas = 4;
+    const int columnas = 7;
+
+    campoBatalla tablero(filas, columnas);  // crear un tablero estándar de 4x5 mas 2 columnas para las banderas
+    tablero.colocarEquipos(filas); // se colocan jugadores
+    tablero.colocarBanderas();    // se colocan banderas
+    tablero.imprimirTablero();    // mostrar el tablero
+}
+
+int main()
+{
+    srand(time(0)); 
+
+    // menu de opciones
+    cout << "Selecciona una opcion para el tablero:\n";
+    cout << "1. Tablero aleatorio entre 3x4 y 10x10\n";
+    cout << "2. Tablero estandar de 7x4\n";
+    cout << "Opcion: ";
+
+    int opcion;
+    cin >> opcion;
+
+    if (opcion == 1)
+    {
+        crearTableroAleatorio(); 
+    }
+    else if (opcion == 2)
+    {
+        crearTableroEstandar();
+    }
+    else
+    {
+        cout << "Opcion no valida. Por favor selecciona 1 o 2.\n";
+    }
+
+    return 0;
+}
