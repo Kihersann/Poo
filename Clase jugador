@@ -1,9 +1,9 @@
 #include <iostream>
-#include <string>
 #include <cstdlib>
 #include <ctime>
 #include <vector>
 #include <map>
+
 using namespace std;
 
 class Jugador {
@@ -15,17 +15,15 @@ private:
     int alcanceMovimiento;
     bool rapido;
     bool experto;
- 
+
 public:
-    
-    Jugador(string tipo, bool esRapido, bool esExperto) {
-        nivelVida = 3;
-        tipoJugador = tipo;
-        rapido = esRapido;
-        experto = esExperto;
+    // constructor que configura al jugador aleatoriamente
+    Jugador() {
+        nivelVida = 3; // vida inicial en 3 para facilitar
         configurarJugadorAleatorio();
     }
 
+    // configuracion aleatoria del jugador
     void configurarJugadorAleatorio() {
         float probabilidad = static_cast<float>(rand()) / RAND_MAX; // numero aleatorio entre 0 y 1
 
@@ -50,14 +48,38 @@ public:
         // configuracion de disparo segun el tipo de jugador
         if (tipoJugador == "Novato") {
             alcanceTiro = 1;
-            estadisticasPunteria = {{"Torso", 1}, {"Extremidades", 0.75}, {"Cabeza", 0.25}};
+            estadisticasPunteria = {{"Torso", 0.10}, {"Extremidades", 0.50}, {"Cabeza", 0.25}};
         } else if (tipoJugador == "Experto") {
-            alcanceTiro = (rand() % 4 == 0) ? 2 : 1; // 75% probabilidad de 1, 25% de 2
+            alcanceTiro = (rand() % 4 == 0) ? 2 : 1;
             estadisticasPunteria = {{"Torso", 0.60}, {"Extremidades", 0.85}, {"Cabeza", 0.05}};
         }
+
+        // se determinar el alcance de movimiento segun si es rapido o no
         alcanceMovimiento = rapido ? 2 : 1;
     }
 
+    // metodos get para los atributos privados
+    bool getRapido() const {
+        return rapido;
+    }
+
+    int getAlcanceMovimiento() const {
+        return alcanceMovimiento;
+    }
+
+    int getAlcanceTiro() const {
+        return alcanceTiro;
+    }
+
+    string getTipoJugador() const {
+        return tipoJugador;
+    }
+
+    int getNivelVida() const {
+        return nivelVida;
+    }
+
+    // metodo para mover al jugador
     void mover(string direccion, int pasos) {
         if (pasos > alcanceMovimiento || pasos <= 0) {
             cout << "Movimiento no permitido.\n";
@@ -66,6 +88,7 @@ public:
         cout << "El jugador se mueve " << pasos << " casillas hacia " << direccion << ".\n";
     }
 
+    // metodo para atacar a otro jugador
     void atacar(Jugador &objetivo) {
         float probabilidad = static_cast<float>(rand()) / RAND_MAX;
         if (probabilidad < estadisticasPunteria["Cabeza"]) {
@@ -78,13 +101,5 @@ public:
             objetivo.nivelVida -= 3;
             cout << "Acertaste en el torso. Nivel de vida restante: " << objetivo.nivelVida << ".\n";
         }
-    }
-
-    int getNivelVida() const {
-        return nivelVida;
-    }
-
-    string getTipoJugador() const {
-        return tipoJugador;
     }
 };
