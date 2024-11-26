@@ -1,16 +1,18 @@
 class TableroPersonal {
 private:
     string nombreJugador;
-    int nivelVida;             
+    int nivelVida;             // Representa los "corazones" del jugador (3 vidas iniciales)
     int impactosExtremidades;  
-    int impactosTorso;         //si es >=1, el jugador queda eliminado
-    int impactosCabeza;        //eliminación automática
+    int impactosTorso;         // Si es >=1, el jugador queda eliminado
+    int impactosCabeza;        // Eliminación automática
     int eliminaciones;        
 
 public:
+    // Constructor
     TableroPersonal(string _nombre)
-        : nombreJugador(_nombre), nivelVida(100), impactosExtremidades(0), impactosTorso(0), impactosCabeza(0), eliminaciones(0) {}
+        : nombreJugador(_nombre), nivelVida(3), impactosExtremidades(0), impactosTorso(0), impactosCabeza(0), eliminaciones(0) {}
 
+    // Método para registrar impactos
     void registrarImpacto(string tipoImpacto) {
         if (tipoImpacto == "Cabeza") {
             impactosCabeza++;
@@ -22,22 +24,26 @@ public:
             cout << "¡" << nombreJugador << " fue eliminado por un impacto en el torso!\n";
         } else if (tipoImpacto == "Extremidades") {
             impactosExtremidades++;
-            if (impactosExtremidades >= 3) {
-                nivelVida = 0; // Eliminación después de 3 impactos en extremidades
-                cout << "¡" << nombreJugador << " fue eliminado por tres impactos en las extremidades!\n";
+            nivelVida--; // Cada impacto en las extremidades reduce 1 corazón
+            if (nivelVida <= 0) {
+                nivelVida = 0; // Asegurar que no sea negativo
+                cout << "¡" << nombreJugador << " fue eliminado por perder todos sus corazones tras impactos en las extremidades!\n";
             } else {
-                cout << nombreJugador << " recibió un impacto en las extremidades. Impactos actuales: " << impactosExtremidades << ".\n";
+                cout << nombreJugador << " recibió un impacto en las extremidades. Impactos actuales: "
+                     << impactosExtremidades << ". Corazones restantes: " << nivelVida << ".\n";
             }
         }
     }
 
+    // Método para registrar una eliminación realizada
     void registrarEliminacion() {
         eliminaciones++;
     }
 
+    // Método para mostrar el estado actual del jugador
     void mostrarEstado() const {
         cout << "Estado de " << nombreJugador << ":\n";
-        cout << " - Nivel de vida: " << nivelVida << "\n";
+        cout << " - Corazones restantes: " << nivelVida << "\n";
         cout << " - Impactos en extremidades: " << impactosExtremidades << "\n";
         cout << " - Impactos en torso: " << impactosTorso << "\n";
         cout << " - Impactos en cabeza: " << impactosCabeza << "\n";
