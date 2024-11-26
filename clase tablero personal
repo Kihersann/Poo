@@ -22,13 +22,11 @@ public:
             cout << "¡" << nombreJugador << " fue eliminado por un impacto en el torso!\n";
         } else if (tipoImpacto == "Extremidades") {
             impactosExtremidades++;
-            nivelVida -= 10; // Cada impacto reduce la vida en 10
             if (impactosExtremidades >= 3) {
-                nivelVida = 0; // Eliminación después de 3 impactos acumulativos
+                nivelVida = 0; // Eliminación después de 3 impactos en extremidades
                 cout << "¡" << nombreJugador << " fue eliminado por tres impactos en las extremidades!\n";
             } else {
-                cout << nombreJugador << " recibió un impacto en las extremidades. Impactos actuales: "
-                     << impactosExtremidades << ". Nivel de vida restante: " << nivelVida << ".\n";
+                cout << nombreJugador << " recibió un impacto en las extremidades. Impactos actuales: " << impactosExtremidades << ".\n";
             }
         }
     }
