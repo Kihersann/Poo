@@ -6,7 +6,7 @@
 #include <map>
 using namespace std;
 
-// clase campoBatalla
+// Clase campoBatalla
 class campoBatalla {
 private:
     vector<vector<Casilla>> casillas;
@@ -20,8 +20,8 @@ public:
             throw invalid_argument("El tamaño del tablero debe ser de 3x4 a 10x10.");
         }
         filas = m;
-        columnas = n + 2; // aumentamos 2 columnas para las banderas
-        casillas = vector<vector<Casilla>>(filas, vector<Casilla>(columnas)); // inicializar las casillas
+        columnas = n + 2; // Aumentamos 2 columnas para las banderas
+        casillas = vector<vector<Casilla>>(filas, vector<Casilla>(columnas)); // Inicializar las casillas
     }
 
     void agregarEquipos(const vector<string>& colores, int jugadoresPorEquipo) {
@@ -34,15 +34,25 @@ public:
 
     void colocarEquipos() {
         int numEquipos = equipos.size();
+        int jugadoresPorEquipo = equipos[0].obtenerJugadores().size();
+
+        // Para cada equipo, colocar sus jugadores en las columnas 1 y penúltima
         for (int i = 0; i < numEquipos; ++i) {
-            vector<Jugador>& jugadores = equipos[i].obtenerJugadores();
-            for (size_t j = 0; j < jugadores.size(); ++j) {
-                if (i == 0) {
-                    // equipo 1 (primera columna, equipo rojo)
-                    casillas[j][1].agregarJugador(jugadores[j].obtenerNombre());
-                } else if (i == 1) {
-                    // equipo 2 (penúltima columna, equipo azul)
-                    casillas[j][columnas - 2].agregarJugador(jugadores[j].obtenerNombre());
+            vector<Jugador>& jugadores = equipos[i].obtenerJugadores();  // Usar no-const en esta parte
+            int columnaInicio = (i == 0) ? 1 : columnas - 2;  // Columna 1 para el equipo 1, penúltima columna para el equipo 2
+
+            for (int j = 0; j < jugadores.size(); ++j) {
+                bool colocado = false;
+                // Encontramos la primera fila vacía para colocar al jugador
+                for (int k = 0; k < filas; ++k) {
+                    if (casillas[k][columnaInicio].obtenerJugadores().size() == 0) {
+                        casillas[k][columnaInicio].agregarJugador(jugadores[j].obtenerNombre());
+                        colocado = true;
+                        break;
+                    }
+                }
+                if (!colocado) {
+                    cout << "No se pudo colocar al jugador " << jugadores[j].obtenerNombre() << " en la columna " << columnaInicio << endl;
                 }
             }
         }
@@ -50,8 +60,8 @@ public:
 
     void colocarBanderas() {
         for (int i = 0; i < filas; i++) {
-            casillas[i][0].colocarBandera(); // bandera en la columna 0
-            casillas[i][columnas - 1].colocarBandera(); // bandera en la última columna
+            casillas[i][0].colocarBandera(); // Bandera en la columna 0
+            casillas[i][columnas - 1].colocarBandera(); // Bandera en la última columna
         }
     }
 
@@ -59,11 +69,11 @@ public:
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
                 if (casillas[i][j].esBandera()) {
-                    cout << "[B] "; // representa una bandera
+                    cout << "[B] "; // Representa una bandera
                 } else if (!casillas[i][j].obtenerJugadores().empty()) {
-                    cout << "[" << casillas[i][j].obtenerJugadores()[0] << "] "; // mostrar el primer jugador
+                    cout << "[" << casillas[i][j].obtenerJugadores()[0] << "] "; // Mostrar el primer jugador
                 } else {
-                    cout << "[ ] "; // casilla vacia
+                    cout << "[ ] "; // Casilla vacía
                 }
             }
             cout << endl;
@@ -76,76 +86,64 @@ public:
         }
     }
 
-    // metodo para atacar a otro jugador
-    void atacar(const string& atacanteNombre, const string& objetivoNombre) {
-        Jugador* atacante = nullptr;
-        Jugador* objetivo = nullptr;
-
-        // buscar los jugadores en los equipos
-        for (auto& equipo : equipos) {
-            for (auto& jugador : equipo.obtenerJugadores()) {
-                if (jugador.obtenerNombre() == atacanteNombre) atacante = &jugador;
-                if (jugador.obtenerNombre() == objetivoNombre) objetivo = &jugador;
+    // Función para verificar si el juego ha iniciado correctamente
+    bool verificarInicioJuego() {
+        // Verificar que todos los equipos tengan jugadores asignados
+        for (const auto& equipo : equipos) {
+            if (equipo.obtenerJugadores().empty()) {
+                cout << "Error: El equipo " << equipo.obtenerColor() << " no tiene jugadores.\n";
+                return false;
             }
         }
 
-        if (!atacante || !objetivo) {
-            cout << "Atacante u objetivo no encontrados.\n";
-            return;
-        }
-
-        // determinar la parte del cuerpo a atacar (por ejemplo, torso, extremidades, cabeza)
-        string partes[] = {"Torso", "Extremidades", "Cabeza"};
-        string parteCuerpo = partes[rand() % 3]; // elegir aleatoriamente una parte del cuerpo para atacar
-
-        float probabilidadAtacar = atacante->obtenerProbabilidadPunteria(parteCuerpo);
-        float probabilidad = static_cast<float>(rand()) / RAND_MAX; // generar un numero aleatorio entre 0 y 1
-
-        if (probabilidad < probabilidadAtacar) {
-            cout << atacanteNombre << " ataca a " << objetivoNombre << " y acierta en el " << parteCuerpo << ".\n";
-            // dependiendo del lugar atacado, se puede restar vida
-            if (parteCuerpo == "Torso") {
-                objetivo->nivelVida -= 1;
-            } else if (parteCuerpo == "Extremidades") {
-                objetivo->nivelVida -= 1;
-            } else if (parteCuerpo == "Cabeza") {
-                objetivo->nivelVida -= 2; // cabeza es mas letal
+        // Verificar que las banderas han sido colocadas
+        bool banderasColocadas = true;
+        for (int i = 0; i < filas; i++) {
+            if (!casillas[i][0].esBandera() || !casillas[i][columnas - 1].esBandera()) {
+                banderasColocadas = false;
+                break;
             }
-        } else {
-            cout << atacanteNombre << " ataca a " << objetivoNombre << " y falla.\n";
         }
+
+        if (!banderasColocadas) {
+            cout << "Error: Las banderas no están colocadas correctamente.\n";
+            return false;
+        }
+
+        cout << "¡El juego ha iniciado correctamente!\n";
+        return true;
     }
 };
 
-// funciones para crear tableros
+// Funciones para crear tableros
 void crearTableroAleatorio() {
-    int filas = rand() % 8 + 3;    // aleatorio entre 3 y 10
-    int columnas = rand() % 7 + 4; // aleatorio entre 4 y 10
+    int filas = rand() % 8 + 3;    // Aleatorio entre 3 y 10
+    int columnas = rand() % 7 + 4; // Aleatorio entre 4 y 10
 
-    campoBatalla tablero(filas, columnas);  // se crea un tablero con dimensiones aleatorias
-    tablero.agregarEquipos({"Rojo", "Azul"}, filas); // se crean 2 equipos con jugadores igual a filas
-    tablero.colocarEquipos(); // se colocan jugadores
-    tablero.colocarBanderas();    // se colocan banderas
-    tablero.imprimirTablero();    // mostrar el tablero
-    tablero.mostrarEquipos();     // mostrar los equipos y jugadores
+    campoBatalla tablero(filas, columnas);  // Se crea un tablero con dimensiones aleatorias
+    tablero.agregarEquipos({"Rojo", "Azul"}, filas); // Se crean 2 equipos con jugadores igual a filas
+    tablero.colocarEquipos(); // Se colocan jugadores
+    tablero.colocarBanderas();    // Se colocan banderas
+    tablero.imprimirTablero();    // Mostrar el tablero
+    tablero.mostrarEquipos();     // Mostrar los equipos y jugadores
 }
 
 void crearTableroEstandar() {
     const int filas = 4;
     const int columnas = 7;
 
-    campoBatalla tablero(filas, columnas);  // crear un tablero estándar de 4x5, mas 2 columnas extra para banderas
-    tablero.agregarEquipos({"Rojo", "Azul"}, filas); // se crean 2 equipos con jugadores igual a filas
-    tablero.colocarEquipos(); // se colocan jugadores
-    tablero.colocarBanderas();    // se colocan banderas
-    tablero.imprimirTablero();    // mostrar el tablero
-    tablero.mostrarEquipos();     // mostrar los equipos y jugadores
+    campoBatalla tablero(filas, columnas);  // Crear un tablero estándar de 4x7
+    tablero.agregarEquipos({"Rojo", "Azul"}, filas); // Se crean 2 equipos con jugadores igual a filas
+    tablero.colocarEquipos(); // Se colocan jugadores
+    tablero.colocarBanderas();    // Se colocan banderas
+    tablero.imprimirTablero();    // Mostrar el tablero
+    tablero.mostrarEquipos();     // Mostrar los equipos y jugadores
 }
 
 int main() {
     srand(time(0));
 
-    // menu de opciones
+    // Menú de opciones
     cout << "Selecciona una opcion para el tablero:\n";
     cout << "1. Tablero aleatorio entre 3x4 y 10x10\n";
     cout << "2. Tablero estandar de 7x4\n";
