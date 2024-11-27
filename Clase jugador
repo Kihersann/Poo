@@ -6,100 +6,37 @@
 
 using namespace std;
 
+// clase Jugador
 class Jugador {
 private:
+    string nombre;
     int nivelVida;
     string tipoJugador;
-    map<string, float> estadisticasPunteria;
-    int alcanceTiro;
-    int alcanceMovimiento;
     bool rapido;
-    bool experto;
 
 public:
-    // constructor que configura al jugador aleatoriamente
-    Jugador() {
-        nivelVida = 3; // vida inicial en 3 para facilitar
-        configurarJugadorAleatorio();
+    Jugador(string _nombre, string _tipo, bool _rapido)
+        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido) {
+        nivelVida = 3; // vida inicial para facilitar
     }
 
-    // configuracion aleatoria del jugador
-    void configurarJugadorAleatorio() {
-        float probabilidad = static_cast<float>(rand()) / RAND_MAX; // numero aleatorio entre 0 y 1
-
-        if (probabilidad < 0.15) {
-            tipoJugador = "Experto"; // experto rapido
-            rapido = true;
-            experto = true;
-        } else if (probabilidad < 0.40) {
-            tipoJugador = "Experto"; // experto lento
-            rapido = false;
-            experto = true;
-        } else if (probabilidad < 0.65) {
-            tipoJugador = "Novato"; // novato rapido
-            rapido = true;
-            experto = false;
-        } else {
-            tipoJugador = "Novato"; // novato lento
-            rapido = false;
-            experto = false;
-        }
-
-        // configuracion de disparo segun el tipo de jugador
-        if (tipoJugador == "Novato") {
-            alcanceTiro = 1;
-            estadisticasPunteria = {{"Torso", 0.10}, {"Extremidades", 0.50}, {"Cabeza", 0.25}};
-        } else if (tipoJugador == "Experto") {
-            alcanceTiro = (rand() % 4 == 0) ? 2 : 1;
-            estadisticasPunteria = {{"Torso", 0.60}, {"Extremidades", 0.85}, {"Cabeza", 0.05}};
-        }
-
-        // se determinar el alcance de movimiento segun si es rapido o no
-        alcanceMovimiento = rapido ? 2 : 1;
-    }
-
-    // metodos get para los atributos privados
-    bool getRapido() const {
-        return rapido;
-    }
-
-    int getAlcanceMovimiento() const {
-        return alcanceMovimiento;
-    }
-
-    int getAlcanceTiro() const {
-        return alcanceTiro;
+    string obtenerNombre() const {
+        return nombre;
     }
 
     string getTipoJugador() const {
         return tipoJugador;
     }
 
+    bool getRapido() const {
+        return rapido;
+    }
+
     int getNivelVida() const {
         return nivelVida;
     }
 
-    // metodo para mover al jugador
-    void mover(string direccion, int pasos) {
-        if (pasos > alcanceMovimiento || pasos <= 0) {
-            cout << "Movimiento no permitido.\n";
-            return;
-        }
-        cout << "El jugador se mueve " << pasos << " casillas hacia " << direccion << ".\n";
-    }
-
-    // metodo para atacar a otro jugador
-    void atacar(Jugador &objetivo) {
-        float probabilidad = static_cast<float>(rand()) / RAND_MAX;
-        if (probabilidad < estadisticasPunteria["Cabeza"]) {
-            objetivo.nivelVida = 0;
-            cout << "¡Acertaste en la cabeza! El jugador ha sido descalificado.\n";
-        } else if (probabilidad < estadisticasPunteria["Extremidades"]) {
-            objetivo.nivelVida -= 1;
-            cout << "Acertaste en una extremidad. Nivel de vida restante: " << objetivo.nivelVida << ".\n";
-        } else {
-            objetivo.nivelVida -= 3;
-            cout << "Acertaste en el torso. Nivel de vida restante: " << objetivo.nivelVida << ".\n";
-        }
+    string descripcionCompleta() const {
+        return getTipoJugador() + (getRapido() ? " Rapido" : " Lento");
     }
 };
