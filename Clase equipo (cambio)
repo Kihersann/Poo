@@ -8,7 +8,7 @@
 
 using namespace std;
 
-/// Clase Equipo
+// Clase Equipo
 class Equipo {
 private:
     string color;
@@ -38,7 +38,6 @@ public:
         return color;
     }
 
-    // Método para mostrar los jugadores del equipo
     void mostrarEquipo() const {
         cout << "Equipo de color: " << color << endl;
         cout << "Jugadores:" << endl;
