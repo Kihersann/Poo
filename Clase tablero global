@@ -1,0 +1,206 @@
+[18:43, 26/11/2024] Fernanda: #include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+const int MAX_CASILLA = 4;  // Cada casilla puede contener hasta 4 jugadores del mismo equipo
+const int MAX_FILAS = 10;    // Tamaño máximo del tablero
+const int MAX_COLUMNAS = 10; // Tamaño máximo del tablero
+
+// Clase que representa a un jugador
+class Jugador {
+public:
+    string nombre;
+    int equipo;  
+    int x, y;    
+
+    Jugador(string nombre, int equipo, int x, int y) {
+        this->nombre = nombre;
+        this->equipo = equipo;
+        this->x = x;
+        this->y = y;
+    }
+};
+
+class TableroGlobal {
+private:
+    vector<Jugador*> tablero[MAX_FILAS][MAX_COLUMNAS]; 
+    vector<Jugador*> equipo1, equipo2; 
+    int turnos;  
+    int muertesEquipo1, muertesEquipo2;
+
+public…
+[18:43, 26/11/2024] Fernanda: se ve muy de chat?
+[18:43, 26/11/2024] Fernanda: Obvio le quito los comentarios
+[19:07, 26/11/2024] Fernanda: #include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+const int MAX_CASILLA = 4;  // Cada casilla puede contener hasta 4 jugadores del mismo equipo
+const int MAX_FILAS = 10;    // Tamaño máximo del tablero
+const int MAX_COLUMNAS = 10; // Tamaño máximo del tablero
+
+class Jugador {
+public:
+    string nombre;
+    int equipo;  
+    int x, y;    
+    bool vivo; // Variable para saber si el jugador está vivo o muerto
+
+    Jugador(string nombre, int equipo, int x, int y) {
+        this->nombre = nombre;
+        this->equipo = equipo;
+        this->x = x;
+        this->y = y;
+        this->vivo = true; // Inicialmente el jugador está vivo
+    }
+};
+
+class TableroGlobal {
+private:
+    vector<Jugador*> tablero[MAX_FILAS][MAX_COLUMNAS]; 
+    vector<Jugador*> equipo1, equipo2; 
+    int turnos;  
+    int muertesEquipo1, muertesEquipo2;
+
+public:
+    TableroGlobal() : turnos(1), muertesEquipo1(0), muertesEquipo2(0) {
+        for (int i = 0; i < MAX_FILAS; i++) {
+            for (int j = 0; j < MAX_COLUMNAS; j++) {
+                tablero[i][j] = vector<Jugador*>();
+            }
+        }
+    }
+
+    void agregarJugador(Jugador* jugador) {
+        if (jugador->equipo == 1) {
+            equipo1.push_back(jugador);
+        } else {
+            equipo2.push_back(jugador);
+        }
+        tablero[jugador->x][jugador->y].push_back(jugador);
+    }
+
+    int moverJugador(Jugador* jugador, int nuevaX, int nuevaY) {
+        if (nuevaX >= 0 && nuevaX < MAX_FILAS && nuevaY >= 0 && nuevaY < MAX_COLUMNAS) {
+            if (tablero[nuevaX][nuevaY].size() < MAX_CASILLA || 
+                (tablero[nuevaX][nuevaY].size() > 0 && tablero[nuevaX][nuevaY][0]->equipo == jugador->equipo)) {
+
+                // Eliminar jugador de la casilla anterior
+                for (auto it = tablero[jugador->x][jugador->y].begin(); it != tablero[jugador->x][jugador->y].end(); ++it) {
+                    if (*it == jugador) {
+                        tablero[jugador->x][jugador->y].erase(it);
+                        break;
+                    }
+                }
+                jugador->x = nuevaX;
+                jugador->y = nuevaY;
+                tablero[nuevaX][nuevaY].push_back(jugador);
+
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void mostrarTablero() {
+        cout << "Turno: " << turnos << endl;
+        cout << "Tablero actual:" << endl;
+        for (int i = 0; i < MAX_FILAS; i++) {
+            for (int j = 0; j < MAX_COLUMNAS; j++) {
+                if (tablero[i][j].size() > 0) {
+                    char equipo = (tablero[i][j][0]->equipo == 1) ? 'A' : 'R'; // Azul = A, Rojo = R
+                    cout << "[" << equipo << "] ";
+                } else {
+                    cout << "[ ] ";
+                }
+            }
+            cout << endl;
+        }
+    }
+
+    void mostrarEstadoJuego() {
+        cout << "Estado del juego:" << endl;
+        cout << "Equipo Azul: " << (equipo1.size() - muertesEquipo1) << " jugadores vivos, " << muertesEquipo1 << " muertos." << endl;
+        cout << "Equipo Rojo: " << (equipo2.size() - muertesEquipo2) << " jugadores vivos, " << muertesEquipo2 << " muertos." << endl;
+    }
+
+    void registrarMuerte(int equipo) {
+        if (equipo == 1) {
+            muertesEquipo1++;
+        } else if (equipo == 2) {
+            muertesEquipo2++;
+        }
+    }
+
+    void siguienteTurno() {
+        turnos++;
+    }
+
+    int verificarVictoria() {
+        if (equipo1.size() - muertesEquipo1 == 0) {
+            cout << "¡Equipo Rojo gana el juego!" << endl;
+            return true;
+        } else if (equipo2.size() - muertesEquipo2 == 0) {
+            cout << "¡Equipo Azul gana el juego!" << endl;
+            return true;
+        }
+        return false;
+    }
+
+    void acertarEnTorso(Jugador* jugador) {
+        cout << "¡Acertaste en el torso! El jugador " << jugador->nombre << " ha sido descalificado." << endl;
+        jugador->vivo = false; 
+        registrarMuerte(jugador->equipo);
+    }
+};
+
+int main() {
+    TableroGlobal juego;
+
+    Jugador* jugador1 = new Jugador("Jugador1", 1, 0, 0);  
+    Jugador* jugador2 = new Jugador("Jugador2", 1, 0, 1);  
+    Jugador* jugador5 = new Jugador("Jugador5", 1, 1, 0);  
+    Jugador* jugador6 = new Jugador("Jugador6", 1, 1, 1);  
+
+    Jugador* jugador3 = new Jugador("Jugador3", 2, 9, 8);  
+    Jugador* jugador4 = new Jugador("Jugador4", 2, 8, 8);  
+    Jugador* jugador7 = new Jugador("Jugador7", 2, 7, 8);  
+    Jugador* jugador8 = new Jugador("Jugador8", 2, 7, 9);  
+
+    juego.agregarJugador(jugador1);
+    juego.agregarJugador(jugador2);
+    juego.agregarJugador(jugador3);
+    juego.agregarJugador(jugador4);
+    juego.agregarJugador(jugador5);
+    juego.agregarJugador(jugador6);
+    juego.agregarJugador(jugador7);
+    juego.agregarJugador(jugador8);
+
+    juego.mostrarTablero();
+    juego.mostrarEstadoJuego();
+
+    juego.moverJugador(jugador1, 1, 0);  
+    juego.moverJugador(jugador2, 0, 2);  
+    juego.mostrarTablero();
+    juego.mostrarEstadoJuego();
+
+    juego.siguienteTurno();
+
+    juego.acertarEnTorso(jugador1); 
+    juego.mostrarTablero();
+    juego.mostrarEstadoJuego();
+
+    juego.moverJugador(jugador2, 1, 0); 
+    juego.mostrarTablero();
+    juego.mostrarEstadoJuego();
+
+    if (juego.verificarVictoria()) {
+        return 0;
+    }
+
+    return 0;
+}
