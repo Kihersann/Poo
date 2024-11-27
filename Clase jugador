@@ -6,7 +6,7 @@
 
 using namespace std;
 
-// clase Jugador
+// Clase Jugador
 class Jugador {
 private:
     string nombre;
@@ -16,9 +16,7 @@ private:
 
 public:
     Jugador(string _nombre, string _tipo, bool _rapido)
-        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido) {
-        nivelVida = 3; // vida inicial para facilitar
-    }
+        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3) {}
 
     string obtenerNombre() const {
         return nombre;
