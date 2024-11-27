@@ -13,10 +13,18 @@ private:
     int nivelVida;
     string tipoJugador;
     bool rapido;
+    map<string, float> estadisticasPunteria;
 
 public:
     Jugador(string _nombre, string _tipo, bool _rapido)
-        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3) {}
+        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3) {
+        // Configuración de las probabilidades de puntería
+        if (tipoJugador == "Experto") {
+            estadisticasPunteria = {{"Torso", 0.60}, {"Extremidades", 0.85}, {"Cabeza", 0.05}};
+        } else if (tipoJugador == "Novato") {
+            estadisticasPunteria = {{"Torso", 0.10}, {"Extremidades", 0.50}, {"Cabeza", 0.25}};
+        }
+    }
 
     string obtenerNombre() const {
         return nombre;
@@ -34,7 +42,20 @@ public:
         return nivelVida;
     }
 
+    void reducirVida(int cantidad) {
+        nivelVida -= cantidad;
+        if (nivelVida < 0) nivelVida = 0;
+    }
+
     string descripcionCompleta() const {
         return getTipoJugador() + (getRapido() ? " Rapido" : " Lento");
+    }
+
+    // Método para obtener la puntería de acuerdo con el tipo de ataque
+    float obtenerProbabilidadPunteria(const string& parteCuerpo) const {
+        if (estadisticasPunteria.find(parteCuerpo) != estadisticasPunteria.end()) {
+            return estadisticasPunteria.at(parteCuerpo);
+        }
+        return 0.0f;
     }
 };
