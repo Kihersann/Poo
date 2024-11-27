@@ -10,9 +10,8 @@ using namespace std;
 // Clase Casilla
 class Casilla {
 private:
-    bool tieneBandera; // Indica si la casilla tiene una bandera
-    vector<string> jugadores; // Nombres de los jugadores en la casilla
-    const int maxJugadores = 4; // Máximo de jugadores por casilla
+    bool tieneBandera;
+    vector<string> jugadores;  // Lista de jugadores en la casilla
 
 public:
     Casilla() : tieneBandera(false) {}
@@ -26,34 +25,12 @@ public:
     }
 
     bool agregarJugador(const string& nombreJugador) {
-        if (jugadores.size() < maxJugadores) {
+        // Añadir un jugador si no hay más de 4 jugadores en la casilla
+        if (jugadores.size() < 4) {
             jugadores.push_back(nombreJugador);
             return true;
-        } else {
-            cout << "La casilla ya está llena (máximo 4 jugadores).\n";
-            return false;
         }
-    }
-
-    bool removerJugador(const string& nombreJugador) {
-        auto it = find(jugadores.begin(), jugadores.end(), nombreJugador); // Usar find correctamente
-        if (it != jugadores.end()) {
-            jugadores.erase(it);
-            return true;
-        }
-        cout << "El jugador no está en esta casilla.\n";
         return false;
-    }
-
-    void listarJugadores() const {
-        if (jugadores.empty()) {
-            cout << "La casilla está vacía.\n";
-            return;
-        }
-        cout << "Jugadores en la casilla:\n";
-        for (const auto& jugador : jugadores) {
-            cout << "- " << jugador << endl;
-        }
     }
 
     vector<string>& obtenerJugadores() {
