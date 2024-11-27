@@ -1,6 +1,10 @@
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include <vector>
+#include <map>
 #include <string>
+#include <algorithm>
 using namespace std;
 
 // Clase Casilla
