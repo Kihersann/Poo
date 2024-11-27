@@ -1,0 +1,56 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+#include <map>
+#include <string>
+#include <algorithm> 
+
+using namespace std;
+
+// Clase Equipo
+class Equipo {
+private:
+    string color;
+    vector<Jugador> jugadores;
+
+public:
+    Equipo(string _color) : color(_color) {}
+
+    void asignarJugadores(int cantidad) {
+        for (int i = 0; i < cantidad; ++i) {
+            string tipo;
+            bool esRapido;
+            float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+
+            if (probabilidad <= 0.15) {
+                tipo = "Experto";
+                esRapido = true;
+            } else if (probabilidad <= 0.40) {
+                tipo = "Experto";
+                esRapido = false;
+            } else if (probabilidad <= 0.65) {
+                tipo = "Novato";
+                esRapido = true;
+            } else {
+                tipo = "Novato";
+                esRapido = false;
+            }
+
+            string nombre = color[0] + to_string(i + 1);
+            jugadores.emplace_back(Jugador(nombre, tipo, esRapido));
+        }
+    }
+
+    void mostrarEquipo() const {
+        cout << "Equipo de color: " << color << endl;
+        cout << "Jugadores:" << endl;
+        for (const auto& jugador : jugadores) {
+            cout << "- " << jugador.obtenerNombre() << " (" << jugador.descripcionCompleta() << ")" << endl;
+        }
+    }
+
+    vector<Jugador>& obtenerJugadores() {
+        return jugadores;
+    }
+};
