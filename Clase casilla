@@ -11,7 +11,7 @@ using namespace std;
 class Casilla {
 private:
     bool tieneBandera;
-    vector<string> jugadores;  // Lista de jugadores en la casilla
+    vector<string> jugadores;
 
 public:
     Casilla() : tieneBandera(false) {}
@@ -33,7 +33,20 @@ public:
         return false;
     }
 
+    bool removerJugador(const string& nombreJugador) {
+        auto it = find(jugadores.begin(), jugadores.end(), nombreJugador);
+        if (it != jugadores.end()) {
+            jugadores.erase(it);
+            return true;
+        }
+        return false;
+    }
+
     vector<string>& obtenerJugadores() {
         return jugadores;
+    }
+
+    bool tieneJugadores() const {
+        return !jugadores.empty();
     }
 };
