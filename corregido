@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <algorithm>  // Necesario para usar find
+#include <algorithm>  // Necesario para usar find y transform
 #include <cmath>      // Para abs
 
 using namespace std;
@@ -407,7 +407,7 @@ public:
         }
     }
 
-    // Método para el turno de la máquina
+    // Método para el turno de la máquina con estrategias avanzadas
     void turnoMaquina(int equipoIndex) {
         vector<Jugador>& jugadores = equipos[equipoIndex].obtenerJugadores();
 
@@ -424,78 +424,111 @@ public:
             return;
         }
 
-        // Seleccionar un jugador aleatorio que esté vivo
-        int indiceJugador = rand() % jugadoresVivos.size();
-        Jugador* jugadorSeleccionado = jugadoresVivos[indiceJugador];
+        // Estrategia: por cada jugador vivo, realizar la mejor acción posible
+        for (auto& jugadorSeleccionado : jugadoresVivos) {
+            bool hizoAccion = false;
+            int x = jugadorSeleccionado->obtenerX();
+            int y = jugadorSeleccionado->obtenerY();
 
-        // Intentar atacar primero
-        bool hizoAccion = false;
-        int x = jugadorSeleccionado->obtenerX();
-        int y = jugadorSeleccionado->obtenerY();
-        vector<Jugador*> objetivos;
+            // Intentar atacar si hay objetivos en rango
+            vector<Jugador*> objetivosEnRango;
+            for (auto& equipo : equipos) {
+                if (equipo.obtenerColor() == equipos[equipoIndex].obtenerColor()) continue; // Ignorar el propio equipo
+                for (auto& jugador : equipo.obtenerJugadores()) {
+                    if (jugador.getNivelVida() <= 0) continue;
+                    int ox = jugador.obtenerX();
+                    int oy = jugador.obtenerY();
 
-        // Buscar objetivos dentro del rango de ataque
-        for (auto& equipo : equipos) {
-            if (equipo.obtenerColor() == equipos[equipoIndex].obtenerColor()) continue; // Ignorar el propio equipo
-            for (auto& jugador : equipo.obtenerJugadores()) {
-                if (jugador.getNivelVida() <= 0) continue;
-                int ox = jugador.obtenerX();
-                int oy = jugador.obtenerY();
-                int distancia = abs(x - ox) + abs(y - oy); // Distancia ortogonal
-                int rangoAtaque = jugadorSeleccionado->obtenerRangoAtaqueActual();
+                    // Determinar el rango de ataque actual
+                    jugadorSeleccionado->determinarRangoAtaque();
+                    int rangoAtaque = jugadorSeleccionado->obtenerRangoAtaqueActual();
 
-                // Determinar el rango de ataque actual
-                jugadorSeleccionado->determinarRangoAtaque();
-                rangoAtaque = jugadorSeleccionado->obtenerRangoAtaqueActual();
+                    // Calcular la distancia ortogonal
+                    int distancia = abs(x - ox) + abs(y - oy);
 
-                if (distancia <= rangoAtaque) {
-                    objetivos.push_back(&jugador);
-                }
-            }
-        }
-
-        if (!objetivos.empty()) {
-            // Seleccionar un objetivo aleatorio dentro del rango
-            int indiceObjetivo = rand() % objetivos.size();
-            Jugador* jugadorObjetivo = objetivos[indiceObjetivo];
-            atacar(jugadorSeleccionado->obtenerNombre(), jugadorObjetivo->obtenerNombre(), equipoIndex);
-            hizoAccion = true;
-        }
-
-        if (!hizoAccion) {
-            // Si no puede atacar, intentar moverse
-            int capacidadMovimiento = jugadorSeleccionado->obtenerCapacidadMovimiento();
-            vector<pair<int, int>> posicionesPosibles;
-
-            // Solo movimientos ortogonales
-            vector<pair<int, int>> direcciones = { {1,0}, {-1,0}, {0,1}, {0,-1} };
-
-            for (const auto& dir : direcciones) {
-                for (int paso = 1; paso <= capacidadMovimiento; ++paso) {
-                    int nx = x + dir.first * paso;
-                    int ny = y + dir.second * paso;
-                    if (nx >= 0 && nx < filas && ny >= 0 && ny < columnas) {
-                        if (casillas[nx][ny].tieneEspacio()) {
-                            posicionesPosibles.emplace_back(nx, ny);
-                        }
+                    if (distancia <= rangoAtaque) {
+                        objetivosEnRango.push_back(&jugador);
                     }
                 }
             }
 
-            if (!posicionesPosibles.empty()) {
-                // Seleccionar una posición aleatoria de las posibles
-                int indicePosicion = rand() % posicionesPosibles.size();
-                int nuevaX = posicionesPosibles[indicePosicion].first;
-                int nuevaY = posicionesPosibles[indicePosicion].second;
-                moverJugador(jugadorSeleccionado->obtenerNombre(), nuevaX, nuevaY, equipoIndex);
-                cout << "La máquina movió al jugador " << jugadorSeleccionado->obtenerNombre()
-                     << " a la posición (" << nuevaX << ", " << nuevaY << ")." << endl;
+            if (!objetivosEnRango.empty()) {
+                // Priorizar atacar al objetivo con menor vida
+                Jugador* objetivo = *min_element(objetivosEnRango.begin(), objetivosEnRango.end(),
+                    [](Jugador* a, Jugador* b) {
+                        return a->getNivelVida() < b->getNivelVida();
+                    });
+                atacar(jugadorSeleccionado->obtenerNombre(), objetivo->obtenerNombre(), equipoIndex);
                 hizoAccion = true;
             }
-        }
 
-        if (!hizoAccion) {
-            cout << "La máquina no pudo realizar ninguna acción con el jugador " << jugadorSeleccionado->obtenerNombre() << "." << endl;
+            if (!hizoAccion) {
+                // Si no puede atacar, moverse estratégicamente hacia la base enemiga o hacia el enemigo más cercano
+                int capacidadMovimiento = jugadorSeleccionado->obtenerCapacidadMovimiento();
+                int objetivoY = (equipoIndex == 0) ? columnas - 1 : 0; // Columna de la base enemiga
+
+                // Calcular dirección hacia la base enemiga
+                int dirY = (objetivoY > y) ? 1 : -1;
+
+                // Generar posibles movimientos hacia la base enemiga
+                vector<pair<int, int>> posicionesPosibles;
+
+                // Movimientos en eje Y (hacia la base enemiga)
+                for (int paso = 1; paso <= capacidadMovimiento; ++paso) {
+                    int ny = y + dirY * paso;
+                    if (ny >= 0 && ny < columnas) {
+                        if (casillas[x][ny].tieneEspacio()) {
+                            posicionesPosibles.emplace_back(x, ny);
+                        }
+                    }
+                }
+
+                // Si no hay movimientos en Y disponibles, intentar en X
+                if (posicionesPosibles.empty()) {
+                    // Movimientos en eje X (para esquivar obstáculos)
+                    vector<int> dirX = { -1, 1 };
+                    for (int dx : dirX) {
+                        int nx = x + dx;
+                        if (nx >= 0 && nx < filas) {
+                            if (casillas[nx][y].tieneEspacio()) {
+                                posicionesPosibles.emplace_back(nx, y);
+                            }
+                        }
+                    }
+                }
+
+                // Si aún no hay posiciones, moverse a cualquier lugar disponible
+                if (posicionesPosibles.empty()) {
+                    vector<pair<int, int>> direcciones = { {1,0}, {-1,0}, {0,1}, {0,-1} };
+                    for (const auto& dir : direcciones) {
+                        int nx = x + dir.first;
+                        int ny = y + dir.second;
+                        if (nx >= 0 && nx < filas && ny >= 0 && ny < columnas) {
+                            if (casillas[nx][ny].tieneEspacio()) {
+                                posicionesPosibles.emplace_back(nx, ny);
+                            }
+                        }
+                    }
+                }
+
+                // Mover al jugador a la mejor posición posible
+                if (!posicionesPosibles.empty()) {
+                    // Elegir la posición que acerque más al jugador a la base enemiga
+                    auto mejorPosicion = *min_element(posicionesPosibles.begin(), posicionesPosibles.end(),
+                        [objetivoY](const pair<int, int>& a, const pair<int, int>& b) {
+                            return abs(a.second - objetivoY) < abs(b.second - objetivoY);
+                        });
+
+                    int nuevaX = mejorPosicion.first;
+                    int nuevaY = mejorPosicion.second;
+                    moverJugador(jugadorSeleccionado->obtenerNombre(), nuevaX, nuevaY, equipoIndex);
+                    hizoAccion = true;
+                }
+            }
+
+            if (!hizoAccion) {
+                cout << "La máquina no pudo realizar ninguna acción con el jugador " << jugadorSeleccionado->obtenerNombre() << "." << endl;
+            }
         }
     }
 
@@ -557,7 +590,7 @@ public:
         // Verificar condiciones de victoria por llegar a la base enemiga o derrota por retirada
         for (int teamIndex = 0; teamIndex < equipos.size(); ++teamIndex) {
             const auto& equipo = equipos[teamIndex];
-            int ownBaseColumn = (teamIndex == 0) ? 0 : columnas - 1;
+            int ownBaseColumn = (teamIndex == 0) ? 1 : columnas - 2; // Ajustado para considerar las columnas iniciales de los jugadores
             int opponentBaseColumn = (teamIndex == 0) ? columnas - 1 : 0;
 
             // Verificar si algún jugador del equipo está en la base enemiga
