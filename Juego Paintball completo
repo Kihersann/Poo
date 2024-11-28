@@ -397,22 +397,40 @@ public:
 
 
     void atacar(string atacante, string objetivo) {
-        // Implementación de ataque con probabilidades según puntería
-        for (auto& equipo : equipos) {
-            for (auto& jugador : equipo.obtenerJugadores()) {
-                if (jugador.obtenerNombre() == atacante) {
-                    float probabilidad = static_cast<float>(rand()) / RAND_MAX;
-                    string parteCuerpo = "Torso";  // Solo para fines de ejemplo
-                    if (probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
-                        cout << atacante << " ataco a " << objetivo << " en el " << parteCuerpo << " Exito!\n";
-                    } else {
-                        cout << atacante << " fallo el ataque a " << objetivo << ".\n";
+    for (auto& equipo : equipos) {
+        for (auto& jugador : equipo.obtenerJugadores()) {
+            if (jugador.obtenerNombre() == atacante) {
+                float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+                string parteCuerpo = "Torso"; // Para simplificar, usamos "Torso"
+                if (probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
+                    cout << atacante << " atacó a " << objetivo << " en el " << parteCuerpo << ". ¡Éxito!\n";
+                    
+                    // Buscar al jugador objetivo
+                    for (auto& equipoOponente : equipos) {
+                        for (auto& jugadorObjetivo : equipoOponente.obtenerJugadores()) {
+                            if (jugadorObjetivo.obtenerNombre() == objetivo) {
+                                jugadorObjetivo.reducirVida(1);
+                                cout << "La vida de " << objetivo << " ahora es " << jugadorObjetivo.getNivelVida() << ".\n";
+
+                                // Si la vida llega a 0, eliminar al jugador de su casilla
+                                if (jugadorObjetivo.getNivelVida() == 0) {
+                                    cout << objetivo << " ha muerto.\n";
+                                    casillas[jugadorObjetivo.obtenerX()][jugadorObjetivo.obtenerY()].removerJugador(objetivo);
+                                }
+                                return;
+                            }
+                        }
                     }
+                } else {
+                    cout << atacante << " falló el ataque a " << objetivo << ".\n";
                 }
+                return;
             }
         }
     }
-};
+    cout << "Atacante u objetivo no encontrados.\n";
+}
+
 
 // Clase Turno
 class Turno {
@@ -543,3 +561,4 @@ int main() {
 
     return 0;
 }
+};
