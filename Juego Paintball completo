@@ -123,8 +123,8 @@ public:
         return jugadores;
     }
 
-    bool tieneJugadores() const {
-        if (jugadores.size() > 4) {
+   bool tieneJugadores() {
+       if (jugadores.size() >= 4) {
             return true;
         }
         return false;
