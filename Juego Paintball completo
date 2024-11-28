@@ -124,7 +124,10 @@ public:
     }
 
     bool tieneJugadores() const {
-        return !jugadores.empty();
+        if (jugadores.size() < 4) {
+            return true;
+        }
+        return false;
     }
 };
 
