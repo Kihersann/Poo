@@ -137,11 +137,28 @@ private:
 public:
     Equipo(string _color) : color(_color) {}
 
-    void asignarJugadores(int cantidad) {
+void asignarJugadores(int cantidad) {
         for (int i = 0; i < cantidad; ++i) {
-            string tipo = (rand() % 2 == 0) ? "Experto" : "Novato";
-            bool esRapido = (rand() % 2 == 0);
-            string nombre = color.substr(0, 1) + to_string(i + 1);  // R1, R2, A1, A2, etc.
+            string tipo;
+            bool esRapido;
+            float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+
+            //tipo de jugador según probabilidades
+            if (probabilidad <= 0.15) {          //0.15-0.0=0.15
+                tipo = "Experto";
+                esRapido = true;
+            } else if (probabilidad <= 0.40) {   //0.40-0.15=25
+                tipo = "Experto";
+                esRapido = false;
+            } else if (probabilidad <= 0.65) {   //0.65-0.40=0.25
+                tipo = "Novato";
+                esRapido = true;
+            } else {                             //1.0-0.65=0.35
+                tipo = "Novato";
+                esRapido = false;
+            }
+
+            string nombre = color[0] + to_string(i + 1); // Nombre del jugador (Ej: R1, R2)
             jugadores.emplace_back(Jugador(nombre, tipo, esRapido));
         }
     }
