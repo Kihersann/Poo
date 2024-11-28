@@ -297,13 +297,14 @@ public:
 // Clase TableroGlobal
 class TableroGlobal {
 private:
-    vector<Jugador*> tablero[10][10]; 
-    vector<Jugador*> equipo1, equipo2; 
-    int turnos;  
-    int muertesEquipo1, muertesEquipo2;
+    vector<Jugador*> tablero[10][10]; // Tablero de tamaño 10x10 para los jugadores
+    vector<Jugador*> equipo1, equipo2; // Jugadores de los dos equipos
+    int turnos;  // Contador de turnos
+    int muertesEquipo1, muertesEquipo2; // Contador de muertes de cada equipo
 
 public:
     TableroGlobal() : turnos(1), muertesEquipo1(0), muertesEquipo2(0) {
+        // Inicializamos el tablero vacío
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 tablero[i][j] = vector<Jugador*>();
@@ -311,6 +312,7 @@ public:
         }
     }
 
+    // Agregar un jugador al tablero y asignarlo al equipo correspondiente
     void agregarJugador(Jugador* jugador) {
         if (jugador->obtenerEquipo() == 1) {
             equipo1.push_back(jugador);
@@ -320,11 +322,23 @@ public:
         tablero[jugador->obtenerX()][jugador->obtenerY()].push_back(jugador);
     }
 
+    // Obtener los jugadores del equipo 1
+    vector<Jugador*>& obtenerEquipo1() {
+        return equipo1;
+    }
+
+    // Obtener los jugadores del equipo 2
+    vector<Jugador*>& obtenerEquipo2() {
+        return equipo2;
+    }
+
+    // Mover un jugador a una nueva posición
     int moverJugador(Jugador* jugador, int nuevaX, int nuevaY) {
         if (nuevaX >= 0 && nuevaX < 10 && nuevaY >= 0 && nuevaY < 10) {
+            // Verificar si la casilla tiene espacio (máximo 4 jugadores por casilla)
             if (tablero[nuevaX][nuevaY].size() < 4 || 
                 (tablero[nuevaX][nuevaY].size() > 0 && tablero[nuevaX][nuevaY][0]->obtenerEquipo() == jugador->obtenerEquipo())) {
-
+                
                 // Eliminar jugador de la casilla anterior
                 for (auto it = tablero[jugador->obtenerX()][jugador->obtenerY()].begin(); it != tablero[jugador->obtenerX()][jugador->obtenerY()].end(); ++it) {
                     if (*it == jugador) {
@@ -332,6 +346,7 @@ public:
                         break;
                     }
                 }
+                // Actualizar posición del jugador
                 jugador->establecerPosicion(nuevaX, nuevaY);
                 tablero[nuevaX][nuevaY].push_back(jugador);
 
@@ -341,12 +356,15 @@ public:
         return false;
     }
 
+    // Mostrar el tablero con las posiciones de los jugadores
     void mostrarTablero() {
         cout << "Turno: " << turnos << endl;
         cout << "Tablero actual:" << endl;
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                if (tablero[i][j].size() > 0) {
+                if (j == 0 || j == 9) { // Mostrar banderas en las columnas de los bordes
+                    cout << "[B] ";
+                } else if (tablero[i][j].size() > 0) {
                     char equipo = (tablero[i][j][0]->obtenerEquipo() == 1) ? 'A' : 'R'; // Azul = A, Rojo = R
                     cout << "[" << equipo << "] ";
                 } else {
@@ -357,12 +375,14 @@ public:
         }
     }
 
+    // Mostrar el estado del juego con la cantidad de jugadores vivos y muertos
     void mostrarEstadoJuego() {
         cout << "Estado del juego:" << endl;
         cout << "Equipo Azul: " << (equipo1.size() - muertesEquipo1) << " jugadores vivos, " << muertesEquipo1 << " muertos." << endl;
         cout << "Equipo Rojo: " << (equipo2.size() - muertesEquipo2) << " jugadores vivos, " << muertesEquipo2 << " muertos." << endl;
     }
 
+    // Registrar una muerte de un jugador de un equipo
     void registrarMuerte(int equipo) {
         if (equipo == 1) {
             muertesEquipo1++;
@@ -371,10 +391,12 @@ public:
         }
     }
 
+    // Pasar al siguiente turno
     void siguienteTurno() {
         turnos++;
     }
 
+    // Verificar si hay un ganador
     int verificarVictoria() {
         if (equipo1.size() - muertesEquipo1 == 0) {
             cout << "¡Equipo Rojo gana el juego!" << endl;
@@ -415,13 +437,24 @@ public:
 int main() {
     srand(time(0));
 
+    // Preguntar al usuario por el modo de juego
+    string modoJuego;
+    cout << "Selecciona el modo de juego (aleatorio/estándar): ";
+    cin >> modoJuego;
+
     // Crear el campo de batalla
     int filas, columnas;
-    cout << "Selecciona el tamaño del tablero (filas y columnas):\n";
-    cout << "Filas (3-10): ";
-    cin >> filas;
-    cout << "Columnas (4-10): ";
-    cin >> columnas;
+    if (modoJuego == "aleatorio") {
+        filas = rand() % 8 + 3; // Filas entre 3 y 10
+        columnas = rand() % 7 + 4; // Columnas entre 4 y 10
+        cout << "Modo aleatorio seleccionado. Tamaño del tablero: " << filas << "x" << columnas << endl;
+    } else {
+        cout << "Selecciona el tamaño del tablero (filas y columnas):\n";
+        cout << "Filas (3-10): ";
+        cin >> filas;
+        cout << "Columnas (4-10): ";
+        cin >> columnas;
+    }
 
     try {
         campoBatalla batalla(filas, columnas);
@@ -429,8 +462,13 @@ int main() {
         // Agregar equipos al campo de batalla
         vector<string> colores = {"Azul", "Rojo"};
         int jugadoresPorEquipo;
-        cout << "Ingresa la cantidad de jugadores por equipo: ";
-        cin >> jugadoresPorEquipo;
+        if (modoJuego == "aleatorio") {
+            jugadoresPorEquipo = rand() % 5 + 1; // Entre 1 y 5 jugadores por equipo
+            cout << "Cantidad de jugadores por equipo (aleatorio): " << jugadoresPorEquipo << endl;
+        } else {
+            cout << "Ingresa la cantidad de jugadores por equipo: ";
+            cin >> jugadoresPorEquipo;
+        }
         batalla.agregarEquipos(colores, jugadoresPorEquipo);
 
         // Colocar los equipos y banderas en el tablero
@@ -480,15 +518,17 @@ int main() {
                 cin >> nuevaX >> nuevaY;
 
                 Jugador* jugador = nullptr;
-                for (auto& equipo : juegoGlobal.equipo1) {
-                    if (equipo->obtenerNombre() == nombreJugador) {
-                        jugador = equipo;
+                // Usar obtenerEquipo1() para acceder al equipo 1
+                for (auto& j : juegoGlobal.obtenerEquipo1()) {
+                    if (j->obtenerNombre() == nombreJugador) {
+                        jugador = j;
                         break;
                     }
                 }
-                for (auto& equipo : juegoGlobal.equipo2) {
-                    if (equipo->obtenerNombre() == nombreJugador) {
-                        jugador = equipo;
+                // Usar obtenerEquipo2() para acceder al equipo 2
+                for (auto& j : juegoGlobal.obtenerEquipo2()) {
+                    if (j->obtenerNombre() == nombreJugador) {
+                        jugador = j;
                         break;
                     }
                 }
