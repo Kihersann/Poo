@@ -191,6 +191,13 @@ void asignarJugadores(int cantidad) {
             cout << "- " << jugador.obtenerNombre() << " (" << jugador.descripcionCompleta() << ")" << endl;
         }
     }
+
+    void Equipo::eliminarJugador(const string& nombre) {
+    jugadores.erase(std::remove_if(jugadores.begin(), jugadores.end(), 
+                                    [&nombre](const Jugador& j) { return j.obtenerNombre() == nombre; }),
+                     jugadores.end());
+    }
+
 };
 
 // Clase CampoBatalla
@@ -472,6 +479,16 @@ public:
                         if (objetivoJugador->getNivelVida() == 0) {
                             cout << objetivo << " ha muerto.\n";
                         }
+
+                        // Si el ataque fue a la cabeza, el atacante también queda eliminado
+                        if (parteCuerpo == "Cabeza") {
+                            cout << atacante << " ha disparado a la cabeza y queda eliminado.\n";
+
+                            // Eliminar al atacante del juego (se asume que hay un método para eliminar jugadores)
+                            for (auto& equipo : equipos) {
+                                equipo.eliminarJugador(atacante);
+                            }
+                        }
                     } else {
                         cout << atacante << " fallo el ataque a " << objetivo << ".\n";
                     }
@@ -484,6 +501,7 @@ public:
             }
         }
     }
+
 };
 
 // Clase Turno
