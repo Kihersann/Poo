@@ -15,11 +15,12 @@ private:
     int nivelVida;
     string tipoJugador;
     bool rapido;
-    map<string, float> estadisticasPunteria;
     int equipo;
     int x, y;
 
 public:
+    map<string, float> estadisticasPunteria;
+
     Jugador(string _nombre, string _tipo, bool _rapido)
         : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3), equipo(0), x(0), y(0) {
         // Configuración de las probabilidades de puntería
@@ -400,36 +401,32 @@ public:
     for (auto& equipo : equipos) {
         for (auto& jugador : equipo.obtenerJugadores()) {
             if (jugador.obtenerNombre() == atacante) {
+                // Generar una probabilidad aleatoria
                 float probabilidad = static_cast<float>(rand()) / RAND_MAX;
-                string parteCuerpo = "Torso"; // Para simplificar, usamos "Torso"
-                if (probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
-                    cout << atacante << " atacó a " << objetivo << " en el " << parteCuerpo << ". ¡Éxito!\n";
-                    
-                    // Buscar al jugador objetivo
-                    for (auto& equipoOponente : equipos) {
-                        for (auto& jugadorObjetivo : equipoOponente.obtenerJugadores()) {
-                            if (jugadorObjetivo.obtenerNombre() == objetivo) {
-                                jugadorObjetivo.reducirVida(1);
-                                cout << "La vida de " << objetivo << " ahora es " << jugadorObjetivo.getNivelVida() << ".\n";
 
-                                // Si la vida llega a 0, eliminar al jugador de su casilla
-                                if (jugadorObjetivo.getNivelVida() == 0) {
-                                    cout << objetivo << " ha muerto.\n";
-                                    casillas[jugadorObjetivo.obtenerX()][jugadorObjetivo.obtenerY()].removerJugador(objetivo);
-                                }
-                                return;
-                            }
-                        }
+                // Seleccionar la parte del cuerpo usando probabilidades acumuladas
+                string parteCuerpo;
+                float acumulado = 0.0f;
+                for (const auto& punteria : jugador.estadisticasPunteria) {
+                    acumulado += punteria.second;  // Sumar probabilidad acumulada
+                    if (probabilidad <= acumulado) {
+                        parteCuerpo = punteria.first;  // Seleccionar la parte del cuerpo
+                        break;
                     }
-                } else {
-                    cout << atacante << " falló el ataque a " << objetivo << ".\n";
                 }
-                return;
+
+                // Determinar si el ataque fue exitoso
+                if (!parteCuerpo.empty() && probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
+                    cout << atacante << " ataco a " << objetivo << " en el " << parteCuerpo << ". ¡Éxito!\n";
+                } else {
+                    cout << atacante << " fallo el ataque a " << objetivo << ".\n";
+                }
+                return; // Salir después de procesar el ataque
             }
         }
     }
-    cout << "Atacante u objetivo no encontrados.\n";
 }
+
 
 
 // Clase Turno
