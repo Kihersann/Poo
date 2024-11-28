@@ -1,0 +1,768 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+#include <map>
+#include <string>
+#include <algorithm>  // Necesario para usar find
+#include <cmath>      // Para abs
+
+using namespace std;
+
+// Clase Jugador
+class Jugador {
+private:
+    string nombre;
+    int nivelVida;
+    string tipoJugador; // "Experto" o "Novato"
+    bool rapido;         // true = Rápido, false = Lento
+    map<string, float> estadisticasPunteria;
+    int equipo;
+    int x, y;
+    int rangoAtaqueActual; // Nueva variable para almacenar el rango de ataque actual
+
+public:
+    // Constructor principal con asignación de equipo
+    Jugador(string _nombre, string _tipo, bool _rapido, int _equipo)
+        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3), equipo(_equipo), x(0), y(0), rangoAtaqueActual(1) {
+        // Configuración de las probabilidades de puntería
+        if (tipoJugador == "Experto") {
+            estadisticasPunteria = { {"Torso", 0.60f}, {"Extremidades", 0.35f}, {"Cabeza", 0.05f} };
+        }
+        else if (tipoJugador == "Novato") {
+            estadisticasPunteria = { {"Torso", 0.25f}, {"Extremidades", 0.50f}, {"Cabeza", 0.25f} };
+        }
+    }
+
+    // Getters
+    string obtenerNombre() const { return nombre; }
+    int obtenerEquipo() const { return equipo; }
+    int obtenerX() const { return x; }
+    int obtenerY() const { return y; }
+    string getTipoJugador() const { return tipoJugador; }
+    bool getRapido() const { return rapido; }
+    int getNivelVida() const { return nivelVida; }
+    int obtenerRangoAtaqueActual() const { return rangoAtaqueActual; } // Getter para rangoAtaqueActual
+
+    // Setters
+    void establecerPosicion(int nuevaX, int nuevaY) { x = nuevaX; y = nuevaY; }
+
+    // Reducir vida
+    void reducirVida(int cantidad) {
+        nivelVida -= cantidad;
+        if (nivelVida < 0) nivelVida = 0;
+    }
+
+    // Descripción completa
+    string descripcionCompleta() const {
+        return getTipoJugador() + (getRapido() ? " Rápido" : " Lento");
+    }
+
+    // Obtener probabilidad de puntería
+    float obtenerProbabilidadPunteria(const string& parteCuerpo) const {
+        if (estadisticasPunteria.find(parteCuerpo) != estadisticasPunteria.end()) {
+            return estadisticasPunteria.at(parteCuerpo);
+        }
+        return 0.0f;
+    }
+
+    // Obtener capacidad de movimiento
+    int obtenerCapacidadMovimiento() const {
+        if (rapido) {
+            // 50% de moverse 1 cuadro, 50% de moverse 2 cuadros
+            float prob = static_cast<float>(rand()) / RAND_MAX;
+            return (prob <= 0.5f) ? 1 : 2;
+        }
+        else {
+            return 1; // Solo pueden moverse 1 cuadro
+        }
+    }
+
+    // Determinar y establecer el rango de ataque actual
+    void determinarRangoAtaque() {
+        if (tipoJugador == "Novato") {
+            rangoAtaqueActual = 1; // Solo pueden atacar a una distancia de un cuadro
+        }
+        else if (tipoJugador == "Experto") {
+            // 50% de atacar a dos cuadros, 50% a uno
+            float prob = static_cast<float>(rand()) / RAND_MAX;
+            rangoAtaqueActual = (prob <= 0.5f) ? 2 : 1;
+        }
+    }
+};
+
+// Clase Casilla
+class Casilla {
+private:
+    bool tieneBandera;
+    string jugador; // Solo un jugador por casilla
+
+public:
+    Casilla() : tieneBandera(false), jugador("") {}
+
+    void colocarBandera() { tieneBandera = true; }
+    bool esBandera() const { return tieneBandera; }
+
+    bool agregarJugador(const string& nombreJugador) {
+        if (jugador.empty()) {
+            jugador = nombreJugador;
+            return true;
+        }
+        return false;
+    }
+
+    bool removerJugador(const string& nombreJugador) {
+        if (jugador == nombreJugador) {
+            jugador = "";
+            return true;
+        }
+        return false;
+    }
+
+    string obtenerJugador() const { return jugador; }
+
+    bool tieneEspacio() const { return jugador.empty(); }
+};
+
+// Clase Equipo
+class Equipo {
+private:
+    string color;
+    vector<Jugador> jugadores;
+
+public:
+    Equipo(string _color) : color(_color) {}
+
+    void asignarJugadores(int cantidad, int equipoIndex) {
+        for (int i = 0; i < cantidad; ++i) {
+            string tipo;
+            bool esRapido;
+            float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+
+            // Tipo de jugador según probabilidades
+            if (probabilidad <= 0.15f) {
+                tipo = "Experto";
+                esRapido = true;
+            }
+            else if (probabilidad <= 0.40f) {
+                tipo = "Experto";
+                esRapido = false;
+            }
+            else if (probabilidad <= 0.65f) {
+                tipo = "Novato";
+                esRapido = true;
+            }
+            else {
+                tipo = "Novato";
+                esRapido = false;
+            }
+
+            string nombre = color[0] + to_string(i + 1); // Ej: A1, R1
+            jugadores.emplace_back(Jugador(nombre, tipo, esRapido, equipoIndex));
+        }
+    }
+
+    vector<Jugador>& obtenerJugadores() { return jugadores; }
+    const vector<Jugador>& obtenerJugadores() const { return jugadores; }
+    string obtenerColor() const { return color; }
+
+    void mostrarEquipo() const {
+        cout << "Equipo de color: " << color << endl;
+        cout << "Jugadores:" << endl;
+        for (const auto& jugador : jugadores) {
+            cout << "- " << jugador.obtenerNombre() << " (" << jugador.descripcionCompleta() << ")" << endl;
+        }
+    }
+};
+
+// Clase CampoBatalla
+class CampoBatalla {
+private:
+    vector<vector<Casilla>> casillas;
+    int filas;
+    int columnas;
+    vector<Equipo> equipos;
+
+public:
+    CampoBatalla(int m, int n) {
+        if (m < 3 || m > 10 || n < 4 || n > 10) {
+            throw invalid_argument("El tamaño del tablero debe ser de 3x4 a 10x10.");
+        }
+        filas = m;
+        columnas = n + 2; // Aumentamos 2 columnas para las banderas
+        casillas = vector<vector<Casilla>>(filas, vector<Casilla>(columnas));
+    }
+
+    vector<Equipo>& obtenerEquipos() { return equipos; }
+
+    void agregarEquipos(const vector<string>& colores, int jugadoresPorEquipo) {
+        for (int i = 0; i < colores.size(); ++i) {
+            Equipo equipo(colores[i]);
+            equipo.asignarJugadores(jugadoresPorEquipo, i);
+            equipos.push_back(equipo);
+        }
+    }
+
+    void colocarEquipos() {
+        int numEquipos = equipos.size();
+
+        for (int i = 0; i < numEquipos; ++i) {
+            vector<Jugador>& jugadores = equipos[i].obtenerJugadores();
+            int columnaInicio = (i == 0) ? 1 : columnas - 2;
+
+            for (int j = 0; j < jugadores.size(); ++j) {
+                if (j < filas) {
+                    // Colocar cada jugador en una fila única
+                    if (casillas[j][columnaInicio].agregarJugador(jugadores[j].obtenerNombre())) {
+                        jugadores[j].establecerPosicion(j, columnaInicio);
+                    }
+                    else {
+                        cout << "No se pudo colocar al jugador " << jugadores[j].obtenerNombre()
+                             << " en la fila " << j << ", columna " << columnaInicio << endl;
+                    }
+                }
+                else {
+                    // Si hay más jugadores que filas, buscar fila disponible
+                    bool colocado = false;
+                    for (int k = 0; k < filas; ++k) {
+                        if (casillas[k][columnaInicio].agregarJugador(jugadores[j].obtenerNombre())) {
+                            jugadores[j].establecerPosicion(k, columnaInicio);
+                            colocado = true;
+                            break;
+                        }
+                    }
+                    if (!colocado) {
+                        cout << "No se pudo colocar al jugador " << jugadores[j].obtenerNombre()
+                             << " en la columna " << columnaInicio << endl;
+                    }
+                }
+            }
+        }
+    }
+
+    void colocarBanderas() {
+        for (int i = 0; i < filas; i++) {
+            casillas[i][0].colocarBandera(); // Bandera en la columna 0
+            casillas[i][columnas - 1].colocarBandera(); // Bandera en la última columna
+        }
+    }
+
+    void imprimirTablero() const {
+        cout << "Tablero:" << endl;
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
+                if (casillas[i][j].esBandera()) {
+                    cout << "[B] ";
+                }
+                else if (!casillas[i][j].obtenerJugador().empty()) {
+                    // Mostrar el jugador en la casilla
+                    cout << "[" << casillas[i][j].obtenerJugador() << "] ";
+                }
+                else {
+                    cout << "[ ] ";
+                }
+            }
+            cout << endl;
+        }
+    }
+
+    void mostrarEquipos() const {
+        for (const auto& equipo : equipos) {
+            equipo.mostrarEquipo();
+        }
+    }
+
+    Jugador* buscarJugadorPorNombre(const string& nombreJugador) {
+        for (auto& equipo : equipos) {
+            for (auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.obtenerNombre() == nombreJugador) {
+                    return &jugador;
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    // Función para imprimir las posiciones de todos los jugadores
+    void imprimirPosiciones() const {
+        for (const auto& equipo : equipos) {
+            for (const auto& jugador : equipo.obtenerJugadores()) {
+                cout << "Jugador " << jugador.obtenerNombre() << " está en (Fila "
+                     << jugador.obtenerX() << ", Columna " << jugador.obtenerY() << ")\n";
+            }
+        }
+    }
+
+    // Método para mover un jugador a una nueva posición
+    bool moverJugador(const string& nombreJugador, int nuevaX, int nuevaY, int equipoActual) {
+        if (nuevaX < 0 || nuevaX >= filas || nuevaY < 0 || nuevaY >= columnas) {
+            cout << "Movimiento inválido: fuera de los límites del tablero." << endl;
+            return false;
+        }
+
+        Jugador* jugador = buscarJugadorPorNombre(nombreJugador);
+        if (jugador == nullptr) {
+            cout << "Jugador no encontrado." << endl;
+            return false;
+        }
+
+        if (jugador->obtenerEquipo() != equipoActual) {
+            cout << "No puedes mover un jugador del equipo contrario." << endl;
+            return false;
+        }
+
+        int actualX = jugador->obtenerX();
+        int actualY = jugador->obtenerY();
+
+        // Verificar si el movimiento es ortogonal
+        int deltaX = abs(nuevaX - actualX);
+        int deltaY = abs(nuevaY - actualY);
+
+        if (!((deltaX == 0 && deltaY <= jugador->obtenerCapacidadMovimiento()) ||
+              (deltaY == 0 && deltaX <= jugador->obtenerCapacidadMovimiento()))) {
+            cout << "Movimiento inválido: solo se permiten movimientos ortogonales de hasta "
+                 << jugador->obtenerCapacidadMovimiento() << " cuadro(s)." << endl;
+            return false;
+        }
+
+        // Verificar si la casilla destino tiene espacio
+        if (!casillas[nuevaX][nuevaY].tieneEspacio()) {
+            cout << "Movimiento inválido: la casilla (" << nuevaX << ", " << nuevaY << ") está ocupada." << endl;
+            return false;
+        }
+
+        // Remover al jugador de la casilla actual
+        casillas[actualX][actualY].removerJugador(nombreJugador);
+
+        // Agregar al jugador a la nueva casilla
+        casillas[nuevaX][nuevaY].agregarJugador(nombreJugador);
+        jugador->establecerPosicion(nuevaX, nuevaY);
+
+        cout << "Jugador " << nombreJugador << " movido a la posición (" << nuevaX << ", " << nuevaY << ")." << endl;
+        return true;
+    }
+
+    // Método para realizar un ataque
+    void atacar(string atacanteNombre, string objetivoNombre, int equipoActual) {
+        Jugador* atacante = buscarJugadorPorNombre(atacanteNombre);
+        Jugador* objetivo = buscarJugadorPorNombre(objetivoNombre);
+
+        if (atacante == nullptr || objetivo == nullptr) {
+            cout << "Atacante u objetivo no encontrado." << endl;
+            return;
+        }
+
+        if (atacante->obtenerEquipo() != equipoActual) {
+            cout << "No puedes atacar con un jugador del equipo contrario." << endl;
+            return;
+        }
+
+        if (atacante->obtenerEquipo() == objetivo->obtenerEquipo()) {
+            cout << "No puedes atacar a un jugador de tu propio equipo." << endl;
+            return;
+        }
+
+        int ax = atacante->obtenerX();
+        int ay = atacante->obtenerY();
+        int ox = objetivo->obtenerX();
+        int oy = objetivo->obtenerY();
+
+        // Calcular la distancia ortogonal
+        int distancia = abs(ax - ox) + abs(ay - oy);
+
+        // Determinar el rango de ataque actual
+        atacante->determinarRangoAtaque();
+        int rangoAtaque = atacante->obtenerRangoAtaqueActual();
+
+        cout << "El rango de ataque de " << atacanteNombre << " es " << rangoAtaque << " espacio(s)." << endl;
+
+        if (distancia <= rangoAtaque) {
+            float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+            string parteCuerpo;
+
+            float pTorso = atacante->obtenerProbabilidadPunteria("Torso");
+            float pExtremidades = pTorso + atacante->obtenerProbabilidadPunteria("Extremidades");
+
+            if (probabilidad <= pTorso) {
+                parteCuerpo = "Torso";
+                objetivo->reducirVida(objetivo->getNivelVida()); // Eliminar jugador al golpear el torso
+            }
+            else if (probabilidad <= pExtremidades) {
+                parteCuerpo = "Extremidades";
+                objetivo->reducirVida(1);
+            }
+            else {
+                parteCuerpo = "Cabeza";
+                objetivo->reducirVida(3);
+            }
+
+            cout << atacanteNombre << " atacó a " << objetivoNombre << " en el " << parteCuerpo << "." << endl;
+            if (objetivo->getNivelVida() <= 0) {
+                cout << objetivoNombre << " ha sido eliminado." << endl;
+                casillas[ox][oy].removerJugador(objetivoNombre);
+            }
+        }
+        else {
+            cout << "El objetivo no está dentro del rango de ataque." << endl;
+        }
+    }
+
+    // Método para el turno de la máquina
+    void turnoMaquina(int equipoIndex) {
+        vector<Jugador>& jugadores = equipos[equipoIndex].obtenerJugadores();
+
+        // Filtrar jugadores vivos
+        vector<Jugador*> jugadoresVivos;
+        for (auto& jugador : jugadores) {
+            if (jugador.getNivelVida() > 0) {
+                jugadoresVivos.push_back(&jugador);
+            }
+        }
+
+        if (jugadoresVivos.empty()) {
+            cout << "El equipo " << equipos[equipoIndex].obtenerColor() << " no tiene jugadores vivos." << endl;
+            return;
+        }
+
+        // Seleccionar un jugador aleatorio que esté vivo
+        int indiceJugador = rand() % jugadoresVivos.size();
+        Jugador* jugadorSeleccionado = jugadoresVivos[indiceJugador];
+
+        // Intentar atacar primero
+        bool hizoAccion = false;
+        int x = jugadorSeleccionado->obtenerX();
+        int y = jugadorSeleccionado->obtenerY();
+        vector<Jugador*> objetivos;
+
+        // Buscar objetivos dentro del rango de ataque
+        for (auto& equipo : equipos) {
+            if (equipo.obtenerColor() == equipos[equipoIndex].obtenerColor()) continue; // Ignorar el propio equipo
+            for (auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.getNivelVida() <= 0) continue;
+                int ox = jugador.obtenerX();
+                int oy = jugador.obtenerY();
+                int distancia = abs(x - ox) + abs(y - oy); // Distancia ortogonal
+                int rangoAtaque = jugadorSeleccionado->obtenerRangoAtaqueActual();
+
+                // Determinar el rango de ataque actual
+                jugadorSeleccionado->determinarRangoAtaque();
+                rangoAtaque = jugadorSeleccionado->obtenerRangoAtaqueActual();
+
+                if (distancia <= rangoAtaque) {
+                    objetivos.push_back(&jugador);
+                }
+            }
+        }
+
+        if (!objetivos.empty()) {
+            // Seleccionar un objetivo aleatorio dentro del rango
+            int indiceObjetivo = rand() % objetivos.size();
+            Jugador* jugadorObjetivo = objetivos[indiceObjetivo];
+            atacar(jugadorSeleccionado->obtenerNombre(), jugadorObjetivo->obtenerNombre(), equipoIndex);
+            hizoAccion = true;
+        }
+
+        if (!hizoAccion) {
+            // Si no puede atacar, intentar moverse
+            int capacidadMovimiento = jugadorSeleccionado->obtenerCapacidadMovimiento();
+            vector<pair<int, int>> posicionesPosibles;
+
+            // Solo movimientos ortogonales
+            vector<pair<int, int>> direcciones = { {1,0}, {-1,0}, {0,1}, {0,-1} };
+
+            for (const auto& dir : direcciones) {
+                for (int paso = 1; paso <= capacidadMovimiento; ++paso) {
+                    int nx = x + dir.first * paso;
+                    int ny = y + dir.second * paso;
+                    if (nx >= 0 && nx < filas && ny >= 0 && ny < columnas) {
+                        if (casillas[nx][ny].tieneEspacio()) {
+                            posicionesPosibles.emplace_back(nx, ny);
+                        }
+                    }
+                }
+            }
+
+            if (!posicionesPosibles.empty()) {
+                // Seleccionar una posición aleatoria de las posibles
+                int indicePosicion = rand() % posicionesPosibles.size();
+                int nuevaX = posicionesPosibles[indicePosicion].first;
+                int nuevaY = posicionesPosibles[indicePosicion].second;
+                moverJugador(jugadorSeleccionado->obtenerNombre(), nuevaX, nuevaY, equipoIndex);
+                cout << "La máquina movió al jugador " << jugadorSeleccionado->obtenerNombre()
+                     << " a la posición (" << nuevaX << ", " << nuevaY << ")." << endl;
+                hizoAccion = true;
+            }
+        }
+
+        if (!hizoAccion) {
+            cout << "La máquina no pudo realizar ninguna acción con el jugador " << jugadorSeleccionado->obtenerNombre() << "." << endl;
+        }
+    }
+
+    // Método para verificar si el juego ha iniciado correctamente
+    bool verificarInicioJuego() {
+        // Verificar que todos los equipos tengan jugadores asignados
+        for (const auto& equipo : equipos) {
+            if (equipo.obtenerJugadores().empty()) {
+                cout << "Error: El equipo " << equipo.obtenerColor() << " no tiene jugadores." << endl;
+                return false;
+            }
+        }
+
+        // Verificar que las banderas han sido colocadas
+        bool banderasColocadas = true;
+        for (int i = 0; i < filas; i++) {
+            if (!casillas[i][0].esBandera() || !casillas[i][columnas - 1].esBandera()) {
+                banderasColocadas = false;
+                break;
+            }
+        }
+
+        if (!banderasColocadas) {
+            cout << "Error: Las banderas no están colocadas correctamente." << endl;
+            return false;
+        }
+
+        cout << "¡El juego ha iniciado correctamente!" << endl;
+        return true;
+    }
+
+    // Método para verificar si el juego ha terminado
+    bool verificarFinJuego() {
+        int equiposConJugadoresVivos = 0;
+        int equipoGanadorPorEliminacion = -1;
+        for (int teamIndex = 0; teamIndex < equipos.size(); ++teamIndex) {
+            const auto& equipo = equipos[teamIndex];
+            bool tieneJugadoresVivos = false;
+            for (const auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.getNivelVida() > 0) {
+                    tieneJugadoresVivos = true;
+                    break;
+                }
+            }
+            if (tieneJugadoresVivos) {
+                equiposConJugadoresVivos++;
+                equipoGanadorPorEliminacion = teamIndex;
+            }
+        }
+        if (equiposConJugadoresVivos == 0) {
+            cout << "No hay jugadores vivos. Es un empate." << endl;
+            return true;
+        }
+        else if (equiposConJugadoresVivos == 1) {
+            cout << "El equipo " << equipos[equipoGanadorPorEliminacion].obtenerColor() << " ha ganado el juego por eliminar al otro equipo." << endl;
+            return true;
+        }
+
+        // Verificar condiciones de victoria por llegar a la base enemiga o derrota por retirada
+        for (int teamIndex = 0; teamIndex < equipos.size(); ++teamIndex) {
+            const auto& equipo = equipos[teamIndex];
+            int ownBaseColumn = (teamIndex == 0) ? 0 : columnas - 1;
+            int opponentBaseColumn = (teamIndex == 0) ? columnas - 1 : 0;
+
+            // Verificar si algún jugador del equipo está en la base enemiga
+            for (const auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.getNivelVida() > 0 && jugador.obtenerY() == opponentBaseColumn) {
+                    cout << "El equipo " << equipo.obtenerColor() << " ha ganado el juego al llegar a la base enemiga." << endl;
+                    return true;
+                }
+            }
+
+            // Verificar si todos los jugadores del equipo están en su propia base
+            bool todosEnBasePropia = true;
+            for (const auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.getNivelVida() > 0 && jugador.obtenerY() != ownBaseColumn) {
+                    todosEnBasePropia = false;
+                    break;
+                }
+            }
+            if (todosEnBasePropia) {
+                cout << "El equipo " << equipo.obtenerColor() << " ha perdido el juego por retirarse." << endl;
+                // El otro equipo gana
+                int otroEquipoIndex = (teamIndex == 0) ? 1 : 0;
+                cout << "El equipo " << equipos[otroEquipoIndex].obtenerColor() << " ha ganado el juego." << endl;
+                return true;
+            }
+        }
+
+        return false; // El juego continúa
+    }
+};
+
+// Clase Turno
+class Turno {
+private:
+    int turnoActual; // 0 o 1
+
+public:
+    Turno() : turnoActual(0) {}
+
+    int getTurnoActual() const { return turnoActual; }
+
+    void cambiarTurno() { turnoActual = (turnoActual == 0) ? 1 : 0; }
+
+    string getEquipoActualColor() const { return (turnoActual == 0) ? "Azul" : "Rojo"; }
+};
+
+int main() {
+    srand(static_cast<unsigned int>(time(0)));
+
+    // Preguntar al usuario por el modo de juego
+    string modoJuego;
+    cout << "Selecciona el modo de juego (aleatorio/estándar): ";
+    cin >> modoJuego;
+
+    // Convertir modoJuego a minúsculas para evitar errores de mayúsculas
+    transform(modoJuego.begin(), modoJuego.end(), modoJuego.begin(), ::tolower);
+
+    int filas, columnas;
+    int jugadoresPorEquipo;
+
+    if (modoJuego == "aleatorio") {
+        filas = rand() % 8 + 3; // Filas entre 3 y 10
+        columnas = rand() % 7 + 4; // Columnas entre 4 y 10
+        jugadoresPorEquipo = filas; // Número de jugadores depende de las filas
+        cout << "Modo aleatorio seleccionado. Tamaño del tablero: " << filas << "x" << columnas
+             << ". Jugadores por equipo: " << jugadoresPorEquipo << endl;
+    }
+    else {
+        // Tamaño estándar del tablero: 4 filas y 5 columnas (más las 2 columnas para las bases)
+        filas = 4;
+        columnas = 5;
+        jugadoresPorEquipo = filas; // Número de jugadores depende de las filas
+        cout << "Modo estándar seleccionado. Tamaño del tablero: " << filas << "x" << (columnas + 2)
+             << ". Jugadores por equipo: " << jugadoresPorEquipo << endl;
+    }
+
+    try {
+        CampoBatalla batalla(filas, columnas);
+
+        vector<string> colores = { "Azul", "Rojo" };
+        batalla.agregarEquipos(colores, jugadoresPorEquipo);
+
+        // Selección del equipo por el usuario
+        string equipoHumanoColor;
+        cout << "Selecciona tu equipo (Azul/Rojo): ";
+        cin >> equipoHumanoColor;
+
+        // Convertir a minúsculas para comparación
+        transform(equipoHumanoColor.begin(), equipoHumanoColor.end(), equipoHumanoColor.begin(), ::tolower);
+
+        int equipoHumano, equipoMaquina;
+        if (equipoHumanoColor == "azul") {
+            equipoHumano = 0;
+            equipoMaquina = 1;
+        }
+        else if (equipoHumanoColor == "rojo") {
+            equipoHumano = 1;
+            equipoMaquina = 0;
+        }
+        else {
+            cout << "Color de equipo inválido. Se asignará el equipo Azul por defecto." << endl;
+            equipoHumano = 0;
+            equipoMaquina = 1;
+        }
+
+        batalla.colocarEquipos();
+        batalla.colocarBanderas();
+
+        batalla.imprimirTablero();
+        batalla.imprimirPosiciones(); // Añadida para verificar posiciones
+        batalla.mostrarEquipos();
+
+        // Verificar que el juego haya iniciado correctamente
+        if (!batalla.verificarInicioJuego()) {
+            return 1;
+        }
+
+        // Ciclo principal del juego
+        Turno turno;
+        bool juegoTerminado = false;
+        while (!juegoTerminado) {
+            cout << "\nTurno del equipo: " << turno.getEquipoActualColor() << endl;
+
+            // Mostrar el estado del tablero
+            batalla.imprimirTablero();
+            batalla.imprimirPosiciones(); // Para verificar posiciones después de cada turno
+
+            if (turno.getTurnoActual() == equipoHumano) {
+                // Turno del humano
+                string accion;
+                cout << "Selecciona acción (mover/atacar): ";
+                cin >> accion;
+
+                // Convertir la acción a minúsculas para evitar errores de mayúsculas
+                transform(accion.begin(), accion.end(), accion.begin(), ::tolower);
+
+                if (accion == "mover") {
+                    string nombreJugador;
+                    int nuevaX, nuevaY;
+                    cout << "Nombre del jugador a mover: ";
+                    cin >> nombreJugador;
+
+                    Jugador* jugador = batalla.buscarJugadorPorNombre(nombreJugador);
+                    if (jugador == nullptr) {
+                        cout << "Jugador no encontrado. Intenta nuevamente." << endl;
+                        continue;
+                    }
+
+                    // Mostrar la capacidad de movimiento
+                    int capacidadMovimiento = jugador->obtenerCapacidadMovimiento();
+                    cout << "El jugador " << nombreJugador << " puede moverse hasta " << capacidadMovimiento << " espacio(s)." << endl;
+
+                    cout << "Nueva posición (fila columna): ";
+                    cin >> nuevaX >> nuevaY;
+
+                    if (batalla.moverJugador(nombreJugador, nuevaX, nuevaY, turno.getTurnoActual())) {
+                        cout << "Jugador " << nombreJugador << " movido exitosamente." << endl;
+                    }
+                    else {
+                        cout << "Movimiento inválido." << endl;
+                    }
+                }
+                else if (accion == "atacar") {
+                    string atacante, objetivo;
+                    cout << "Nombre del atacante: ";
+                    cin >> atacante;
+
+                    Jugador* jugadorAtacante = batalla.buscarJugadorPorNombre(atacante);
+                    if (jugadorAtacante == nullptr) {
+                        cout << "Atacante no encontrado. Intenta nuevamente." << endl;
+                        continue;
+                    }
+
+                    // Determinar y mostrar el rango de ataque
+                    jugadorAtacante->determinarRangoAtaque();
+                    int rangoAtaque = jugadorAtacante->obtenerRangoAtaqueActual();
+                    cout << "El jugador " << atacante << " tiene un rango de ataque de " << rangoAtaque << " espacio(s)." << endl;
+
+                    cout << "Nombre del objetivo: ";
+                    cin >> objetivo;
+
+                    batalla.atacar(atacante, objetivo, turno.getTurnoActual());
+                }
+                else {
+                    cout << "Acción no válida. Por favor, elige 'mover' o 'atacar'." << endl;
+                }
+            }
+            else {
+                // Turno de la máquina
+                cout << "La máquina está tomando su turno..." << endl;
+                batalla.turnoMaquina(equipoMaquina);
+            }
+
+            // Verificar si el juego ha terminado
+            juegoTerminado = batalla.verificarFinJuego();
+            if (!juegoTerminado) {
+                turno.cambiarTurno();
+            }
+        }
+
+    }
+    catch (const invalid_argument& e) {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
+
+    return 0;
+}
