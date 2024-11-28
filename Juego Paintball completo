@@ -204,7 +204,7 @@ private:
 public:
     CampoBatalla(int m, int n) {
         if (m < 3 || m > 10 || n < 4 || n > 10) {
-            throw invalid_argument("El tamaño del tablero debe ser de 3x4 a 10x10.");
+            throw invalid_argument("El tamano del tablero debe ser de 3x4 a 10x10.");
         }
         filas = m;
         columnas = n + 2; // Aumentamos 2 columnas para las banderas
@@ -281,7 +281,7 @@ public:
     // Método para mover un jugador a una nueva posición
     bool moverJugador(const string& nombreJugador, int nuevaX, int nuevaY) {
         if (nuevaX < 0 || nuevaX >= filas || nuevaY < 0 || nuevaY >= columnas) {
-            cout << "Movimiento inválido: fuera de los límites del tablero." << endl;
+            cout << "Movimiento invalido: fuera de los limites del tablero." << endl;
             return false;
         }
 
@@ -292,7 +292,7 @@ public:
                     int actualY = jugador.obtenerY();
 
                     if (casillas[nuevaX][nuevaY].tieneJugadores()) {
-                        cout << "Movimiento inválido: la casilla está ocupada." << endl;
+                        cout << "Movimiento invalido: la casilla esta ocupada." << endl;
                         return false;
                     }
 
@@ -347,7 +347,7 @@ public:
         }
 
         if (!banderasColocadas) {
-            cout << "Error: Las banderas no están colocadas correctamente.\n";
+            cout << "Error: Las banderas no estan colocadas correctamente.\n";
             return false;
         }
 
@@ -366,7 +366,7 @@ public:
             }
         }
         if (todosMuertos) {
-            cout << "El equipo " << equipo.obtenerColor() << " ha perdido porque todos sus jugadores están muertos.\n";
+            cout << "El equipo " << equipo.obtenerColor() << " ha perdido porque todos sus jugadores estan muertos.\n";
             return true;
         }
     }
@@ -458,7 +458,7 @@ public:
 
                     // Aplicar daño al objetivo si el ataque fue exitoso
                     if (ataqueExitoso) {
-                        cout << atacante << " atacó a " << objetivo << " en el " << parteCuerpo << ". ¡Éxito!\n";
+                        cout << atacante << " ataco a " << objetivo << " en el " << parteCuerpo << ". ¡Exito!\n";
 
                         // Reducir vida dependiendo de la parte del cuerpo
                         int dano = 1;  // Asumimos que cada ataque reduce 1 de vida
@@ -473,10 +473,10 @@ public:
                             cout << objetivo << " ha muerto.\n";
                         }
                     } else {
-                        cout << atacante << " falló el ataque a " << objetivo << ".\n";
+                        cout << atacante << " fallo el ataque a " << objetivo << ".\n";
                     }
                 } else {
-                    cout << "El objetivo " << objetivo << " no existe o ya está muerto.\n";
+                    cout << "El objetivo " << objetivo << " no existe o ya esta muerto.\n";
                 }
 
                 return;  // Salir después de procesar el ataque
