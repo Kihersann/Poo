@@ -192,12 +192,11 @@ void asignarJugadores(int cantidad) {
         }
     }
 
-    void Equipo::eliminarJugador(const string& nombre) {
+    void eliminarJugador(const string& nombre) {
     jugadores.erase(std::remove_if(jugadores.begin(), jugadores.end(), 
                                     [&nombre](const Jugador& j) { return j.obtenerNombre() == nombre; }),
                      jugadores.end());
     }
-
 };
 
 // Clase CampoBatalla
