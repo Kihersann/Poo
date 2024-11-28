@@ -24,9 +24,9 @@ public:
         : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3), equipo(0), x(0), y(0) {
         // Configuración de las probabilidades de puntería
         if (tipoJugador == "Experto") {
-            estadisticasPunteria = { {"Torso", 0.60}, {"Extremidades", 0.85}, {"Cabeza", 0.05} };
+            estadisticasPunteria = { {"Torso", 0.60}, {"Extremidades", 0.35}, {"Cabeza", 0.05} };
         } else if (tipoJugador == "Novato") {
-            estadisticasPunteria = { {"Torso", 0.10}, {"Extremidades", 0.50}, {"Cabeza", 0.25} };
+            estadisticasPunteria = { {"Torso", 0.25}, {"Extremidades", 0.50}, {"Cabeza", 0.25} };
         }
     }
 
