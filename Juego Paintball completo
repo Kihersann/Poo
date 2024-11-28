@@ -77,6 +77,10 @@ public:
         return getTipoJugador() + (getRapido() ? " Rapido" : " Lento");
     }
 
+    bool estaMuerto() const {
+    return nivelVida <= 0;
+    }
+
     // Método para obtener la puntería de acuerdo con el tipo de ataque
     float obtenerProbabilidadPunteria(const string& parteCuerpo) const {
         if (estadisticasPunteria.find(parteCuerpo) != estadisticasPunteria.end()) {
@@ -306,6 +310,23 @@ public:
         return false;
     }
 
+    void verificarMuertes() {
+    for (auto& equipo : equipos) {
+        for (auto& jugador : equipo.obtenerJugadores()) {
+            if (jugador.estaMuerto()) {
+                // Aquí podrías eliminar al jugador del tablero
+                cout << jugador.obtenerNombre() << " ha muerto.\n";
+                // Eliminarlo de la casilla y del equipo
+                for (int fila = 0; fila < filas; ++fila) {
+                    for (int columna = 0; columna < columnas; ++columna) {
+                        casillas[fila][columna].removerJugador(jugador.obtenerNombre());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Función para verificar si el juego ha iniciado correctamente
     bool verificarInicioJuego() {
         // Verificar que todos los equipos tengan jugadores asignados
@@ -402,10 +423,10 @@ public:
     for (auto& equipo : equipos) {
         for (auto& jugador : equipo.obtenerJugadores()) {
             if (jugador.obtenerNombre() == atacante) {
-                // Generar una probabilidad aleatoria
+                // Generar una probabilidad aleatoria para determinar el objetivo del ataque
                 float probabilidad = static_cast<float>(rand()) / RAND_MAX;
 
-                // Seleccionar la parte del cuerpo usando probabilidades acumuladas
+                // Seleccionar la parte del cuerpo usando las probabilidades acumuladas
                 string parteCuerpo;
                 float acumulado = 0.0f;
                 for (const auto& punteria : jugador.estadisticasPunteria) {
@@ -416,18 +437,53 @@ public:
                     }
                 }
 
-                // Determinar si el ataque fue exitoso
-                if (!parteCuerpo.empty() && probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
-                    cout << atacante << " ataco a " << objetivo << " en el " << parteCuerpo << ". ¡Éxito!\n";
-                } else {
-                    cout << atacante << " fallo el ataque a " << objetivo << ".\n";
+                // Verificar que el objetivo exista y que no esté muerto
+                Jugador* objetivoJugador = nullptr;
+                for (auto& equipoObjetivo : equipos) {
+                    for (auto& jugadorObjetivo : equipoObjetivo.obtenerJugadores()) {
+                        if (jugadorObjetivo.obtenerNombre() == objetivo) {
+                            objetivoJugador = &jugadorObjetivo;
+                            break;
+                        }
+                    }
+                    if (objetivoJugador) break;
                 }
-                return; // Salir después de procesar el ataque
+
+                if (objetivoJugador) {
+                    // Determinar si el ataque fue exitoso
+                    bool ataqueExitoso = false;
+                    if (!parteCuerpo.empty() && probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
+                        ataqueExitoso = true;
+                    }
+
+                    // Aplicar daño al objetivo si el ataque fue exitoso
+                    if (ataqueExitoso) {
+                        cout << atacante << " atacó a " << objetivo << " en el " << parteCuerpo << ". ¡Éxito!\n";
+
+                        // Reducir vida dependiendo de la parte del cuerpo
+                        int dano = 1;  // Asumimos que cada ataque reduce 1 de vida
+                        if (parteCuerpo == "Cabeza") {
+                            dano = 2;  // Un ataque a la cabeza es más dañino
+                        }
+
+                        objetivoJugador->reducirVida(dano);
+
+                        // Verificar si el jugador objetivo murió
+                        if (objetivoJugador->getNivelVida() == 0) {
+                            cout << objetivo << " ha muerto.\n";
+                        }
+                    } else {
+                        cout << atacante << " falló el ataque a " << objetivo << ".\n";
+                    }
+                } else {
+                    cout << "El objetivo " << objetivo << " no existe o ya está muerto.\n";
+                }
+
+                return;  // Salir después de procesar el ataque
                 }
             }
         }
     }
-
 };
 
 // Clase Turno
