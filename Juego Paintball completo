@@ -252,6 +252,38 @@ public:
         }
     }
 
+    // Método para mover un jugador a una nueva posición
+    bool moverJugador(const string& nombreJugador, int nuevaX, int nuevaY) {
+        if (nuevaX < 0 || nuevaX >= filas || nuevaY < 0 || nuevaY >= columnas) {
+            cout << "Movimiento inválido: fuera de los límites del tablero." << endl;
+            return false;
+        }
+
+        for (auto& equipo : equipos) {
+            for (auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.obtenerNombre() == nombreJugador) {
+                    int actualX = jugador.obtenerX();
+                    int actualY = jugador.obtenerY();
+
+                    if (casillas[nuevaX][nuevaY].tieneJugadores()) {
+                        cout << "Movimiento inválido: la casilla está ocupada." << endl;
+                        return false;
+                    }
+
+                    // Remover al jugador de la casilla actual
+                    casillas[actualX][actualY].removerJugador(nombreJugador);
+
+                    // Agregar al jugador a la nueva casilla
+                    casillas[nuevaX][nuevaY].agregarJugador(nombreJugador);
+                    jugador.establecerPosicion(nuevaX, nuevaY);
+
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Función para verificar si el juego ha iniciado correctamente
     bool verificarInicioJuego() {
         // Verificar que todos los equipos tengan jugadores asignados
@@ -336,10 +368,10 @@ int main() {
     int jugadoresPorEquipo;
 
     if (modoJuego == "aleatorio") {
+        filas = rand() % 8 + 3; // Filas entre 3 y 10
         jugadoresPorEquipo = rand() % 5 + 1; // Entre 1 y 5 jugadores por equipo
-        filas = jugadoresPorEquipo; // Filas igual al número de jugadores por equipo
         columnas = rand() % 7 + 4; // Columnas entre 4 y 10
-        cout << "Modo aleatorio seleccionado. Tamaño del tablero: " << filas << "x" << columnas << endl;
+        cout << "Modo aleatorio seleccionado. Tamaño del tablero: " << filas << "x" << columnas << ". Jugadores por equipo: " << jugadoresPorEquipo << endl;
     } else {
         cout << "Selecciona el tamaño del tablero (filas y columnas):\n";
         cout << "Filas (3-10): ";
@@ -392,20 +424,7 @@ int main() {
                 cout << "Nueva posicion (fila columna): ";
                 cin >> nuevaX >> nuevaY;
 
-                bool movimientoValido = false;
-                for (auto& equipo : batalla.obtenerEquipos()) {
-                    vector<Jugador>& jugadores = equipo.obtenerJugadores();
-                    for (auto& jugador : jugadores) {
-                        if (jugador.obtenerNombre() == nombreJugador) {
-                            movimientoValido = true;
-                            jugador.establecerPosicion(nuevaX, nuevaY);
-                            break;
-                        }
-                    }
-                    if (movimientoValido) break;
-                }
-
-                if (movimientoValido) {
+                if (batalla.moverJugador(nombreJugador, nuevaX, nuevaY)) {
                     cout << "Jugador " << nombreJugador << " movido exitosamente.\n";
                 } else {
                     cout << "Movimiento invalido.\n";
