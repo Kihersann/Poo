@@ -15,12 +15,11 @@ private:
     int nivelVida;
     string tipoJugador;
     bool rapido;
+    map<string, float> estadisticasPunteria;
     int equipo;
     int x, y;
 
 public:
-    map<string, float> estadisticasPunteria;
-
     Jugador(string _nombre, string _tipo, bool _rapido)
         : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3), equipo(0), x(0), y(0) {
         // Configuración de las probabilidades de puntería
@@ -398,36 +397,22 @@ public:
 
 
     void atacar(string atacante, string objetivo) {
-    for (auto& equipo : equipos) {
-        for (auto& jugador : equipo.obtenerJugadores()) {
-            if (jugador.obtenerNombre() == atacante) {
-                // Generar una probabilidad aleatoria
-                float probabilidad = static_cast<float>(rand()) / RAND_MAX;
-
-                // Seleccionar la parte del cuerpo usando probabilidades acumuladas
-                string parteCuerpo;
-                float acumulado = 0.0f;
-                for (const auto& punteria : jugador.estadisticasPunteria) {
-                    acumulado += punteria.second;  // Sumar probabilidad acumulada
-                    if (probabilidad <= acumulado) {
-                        parteCuerpo = punteria.first;  // Seleccionar la parte del cuerpo
-                        break;
+        // Implementación de ataque con probabilidades según puntería
+        for (auto& equipo : equipos) {
+            for (auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.obtenerNombre() == atacante) {
+                    float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+                    string parteCuerpo = "Torso";  // Solo para fines de ejemplo
+                    if (probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
+                        cout << atacante << " ataco a " << objetivo << " en el " << parteCuerpo << " Exito!\n";
+                    } else {
+                        cout << atacante << " fallo el ataque a " << objetivo << ".\n";
                     }
                 }
-
-                // Determinar si el ataque fue exitoso
-                if (!parteCuerpo.empty() && probabilidad <= jugador.obtenerProbabilidadPunteria(parteCuerpo)) {
-                    cout << atacante << " ataco a " << objetivo << " en el " << parteCuerpo << ". ¡Éxito!\n";
-                } else {
-                    cout << atacante << " fallo el ataque a " << objetivo << ".\n";
-                }
-                return; // Salir después de procesar el ataque
             }
         }
     }
-}
-
-
+};
 
 // Clase Turno
 class Turno {
@@ -558,4 +543,3 @@ int main() {
 
     return 0;
 }
-};
