@@ -16,20 +16,42 @@ private:
     string tipoJugador;
     bool rapido;
     map<string, float> estadisticasPunteria;
+    int equipo;
+    int x, y;
 
 public:
     Jugador(string _nombre, string _tipo, bool _rapido)
-        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3) {
+        : nombre(_nombre), tipoJugador(_tipo), rapido(_rapido), nivelVida(3), equipo(0), x(0), y(0) {
         // Configuración de las probabilidades de puntería
         if (tipoJugador == "Experto") {
-            estadisticasPunteria = {{"Torso", 0.60}, {"Extremidades", 0.85}, {"Cabeza", 0.05}};
+            estadisticasPunteria = { {"Torso", 0.60}, {"Extremidades", 0.35}, {"Cabeza", 0.05} };
         } else if (tipoJugador == "Novato") {
-            estadisticasPunteria = {{"Torso", 0.10}, {"Extremidades", 0.50}, {"Cabeza", 0.25}};
+            estadisticasPunteria = { {"Torso", 0.25}, {"Extremidades", 0.50}, {"Cabeza", 0.25} };
         }
     }
 
+    Jugador(string _nombre, int _equipo, int _x, int _y)
+        : nombre(_nombre), equipo(_equipo), x(_x), y(_y), nivelVida(3), tipoJugador("Novato"), rapido(false) {}
+
     string obtenerNombre() const {
         return nombre;
+    }
+
+    int obtenerEquipo() const {
+        return equipo;
+    }
+
+    int obtenerX() const {
+        return x;
+    }
+
+    int obtenerY() const {
+        return y;
+    }
+
+    void establecerPosicion(int nuevaX, int nuevaY) {
+        x = nuevaX;
+        y = nuevaY;
     }
 
     string getTipoJugador() const {
@@ -101,8 +123,11 @@ public:
         return jugadores;
     }
 
-    bool tieneJugadores() const {
-        return !jugadores.empty();
+    bool tieneJugadores() {
+       if (jugadores.size() >= 4) {
+            return true;
+        }
+        return false;
     }
 };
 
@@ -115,11 +140,28 @@ private:
 public:
     Equipo(string _color) : color(_color) {}
 
-    void asignarJugadores(int cantidad) {
+void asignarJugadores(int cantidad) {
         for (int i = 0; i < cantidad; ++i) {
-            string tipo = (rand() % 2 == 0) ? "Experto" : "Novato";
-            bool esRapido = (rand() % 2 == 0);
-            string nombre = color.substr(0, 1) + to_string(i + 1);  // R1, R2, A1, A2, etc.
+            string tipo;
+            bool esRapido;
+            float probabilidad = static_cast<float>(rand()) / RAND_MAX;
+
+            //tipo de jugador según probabilidades
+            if (probabilidad <= 0.15) {          //0.15-0.0=0.15
+                tipo = "Experto";
+                esRapido = true;
+            } else if (probabilidad <= 0.40) {   //0.40-0.15=25
+                tipo = "Experto";
+                esRapido = false;
+            } else if (probabilidad <= 0.65) {   //0.65-0.40=0.25
+                tipo = "Novato";
+                esRapido = true;
+            } else {                             //1.0-0.65=0.35
+                tipo = "Novato";
+                esRapido = false;
+            }
+
+            string nombre = color[0] + to_string(i + 1); // Nombre del jugador (Ej: R1, R2)
             jugadores.emplace_back(Jugador(nombre, tipo, esRapido));
         }
     }
@@ -145,90 +187,8 @@ public:
     }
 };
 
-class TableroPersonal {
-private:
-    string nombreJugador;
-    int nivelVida;             // Representa los "corazones" del jugador (3 vidas iniciales)
-    int impactosExtremidades;  
-    int impactosTorso;         // Si es >=1, el jugador queda eliminado
-    int impactosCabeza;        // Eliminación automática
-    int eliminaciones;        
-
-public:
-    // Constructor
-    TableroPersonal(string _nombre)
-        : nombreJugador(_nombre), nivelVida(3), impactosExtremidades(0), impactosTorso(0), impactosCabeza(0), eliminaciones(0) {}
-
-    // Método para registrar impactos
-    void registrarImpacto(string tipoImpacto) {
-        if (tipoImpacto == "Cabeza") {
-            impactosCabeza++;
-            nivelVida = 0; // Eliminación inmediata
-            cout << "¡" << nombreJugador << " fue eliminado por un impacto en la cabeza!\n";
-        } else if (tipoImpacto == "Torso") {
-            impactosTorso++;
-            nivelVida = 0; // Eliminación inmediata
-            cout << "¡" << nombreJugador << " fue eliminado por un impacto en el torso!\n";
-        } else if (tipoImpacto == "Extremidades") {
-            impactosExtremidades++;
-            nivelVida--; // Cada impacto en las extremidades reduce 1 corazón
-            if (nivelVida <= 0) {
-                nivelVida = 0; // Asegurar que no sea negativo
-                cout << "¡" << nombreJugador << " fue eliminado por perder todos sus corazones tras impactos en las extremidades!\n";
-            } else {
-                cout << nombreJugador << " recibió un impacto en las extremidades. Impactos actuales: "
-                     << impactosExtremidades << ". Corazones restantes: " << nivelVida << ".\n";
-            }
-        }
-    }
-
-    // Método para registrar una eliminación realizada
-    void registrarEliminacion() {
-        eliminaciones++;
-    }
-
-    // Método para mostrar el estado actual del jugador
-    void mostrarEstado() const {
-        cout << "Estado de " << nombreJugador << ":\n";
-        cout << " - Corazones restantes: " << nivelVida << "\n";
-        cout << " - Impactos en extremidades: " << impactosExtremidades << "\n";
-        cout << " - Impactos en torso: " << impactosTorso << "\n";
-        cout << " - Impactos en cabeza: " << impactosCabeza << "\n";
-        cout << " - Eliminaciones realizadas: " << eliminaciones << "\n";
-    }
-
-    // Método para verificar si el jugador está eliminado
-    bool estaEliminado() const {
-        return nivelVida <= 0;
-    }
-};
-
-class Turno {
-private:
-    int turnoActual; // 1 o 2 (equipo actual)
-
-public:
-    // Constructor
-    Turno() : turnoActual(1) {} // Inicia con el equipo 1
-
-    // Obtener el turno actual
-    int getTurnoActual() const {
-        return turnoActual;
-    }
-
-    // Cambiar de turno
-    void cambiarTurno() {
-        turnoActual = (turnoActual == 1) ? 2 : 1;
-    }
-
-    // Obtener el equipo actual en formato 'X' o 'O'
-    char getEquipoActual() const {
-        return (turnoActual == 1) ? 'X' : 'O';
-    }
-};
-
-// Clase campoBatalla
-class campoBatalla {
+// Clase CampoBatalla
+class CampoBatalla {
 private:
     vector<vector<Casilla>> casillas;
     int filas;
@@ -236,13 +196,17 @@ private:
     vector<Equipo> equipos;
 
 public:
-    campoBatalla(int m, int n) {
+    CampoBatalla(int m, int n) {
         if (m < 3 || m > 10 || n < 4 || n > 10) {
             throw invalid_argument("El tamaño del tablero debe ser de 3x4 a 10x10.");
         }
         filas = m;
         columnas = n + 2; // Aumentamos 2 columnas para las banderas
         casillas = vector<vector<Casilla>>(filas, vector<Casilla>(columnas)); // Inicializar las casillas
+    }
+
+    vector<Equipo>& obtenerEquipos() {
+        return equipos;
     }
 
     void agregarEquipos(const vector<string>& colores, int jugadoresPorEquipo) {
@@ -268,6 +232,7 @@ public:
                 for (int k = 0; k < filas; ++k) {
                     if (casillas[k][columnaInicio].obtenerJugadores().size() == 0) {
                         casillas[k][columnaInicio].agregarJugador(jugadores[j].obtenerNombre());
+                        jugadores[j].establecerPosicion(k, columnaInicio);
                         colocado = true;
                         break;
                     }
@@ -307,6 +272,38 @@ public:
         }
     }
 
+    // Método para mover un jugador a una nueva posición
+    bool moverJugador(const string& nombreJugador, int nuevaX, int nuevaY) {
+        if (nuevaX < 0 || nuevaX >= filas || nuevaY < 0 || nuevaY >= columnas) {
+            cout << "Movimiento inválido: fuera de los límites del tablero." << endl;
+            return false;
+        }
+
+        for (auto& equipo : equipos) {
+            for (auto& jugador : equipo.obtenerJugadores()) {
+                if (jugador.obtenerNombre() == nombreJugador) {
+                    int actualX = jugador.obtenerX();
+                    int actualY = jugador.obtenerY();
+
+                    if (casillas[nuevaX][nuevaY].tieneJugadores()) {
+                        cout << "Movimiento inválido: la casilla está ocupada." << endl;
+                        return false;
+                    }
+
+                    // Remover al jugador de la casilla actual
+                    casillas[actualX][actualY].removerJugador(nombreJugador);
+
+                    // Agregar al jugador a la nueva casilla
+                    casillas[nuevaX][nuevaY].agregarJugador(nombreJugador);
+                    jugador.establecerPosicion(nuevaX, nuevaY);
+
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Función para verificar si el juego ha iniciado correctamente
     bool verificarInicioJuego() {
         // Verificar que todos los equipos tengan jugadores asignados
@@ -335,52 +332,70 @@ public:
         return true;
     }
 
-    // Mover al jugador
-    void mover(string nombreJugador, string direccion) {
-        for (auto& equipo : equipos) {
-            for (auto& jugador : equipo.obtenerJugadores()) {
-                if (jugador.obtenerNombre() == nombreJugador) {
-                    int x = -1, y = -1;
-                    // Buscar la casilla en el tablero que contiene al jugador
-                    for (int i = 0; i < filas; ++i) {
-                        for (int j = 0; j < columnas; ++j) {
-                            if (casillas[i][j].tieneJugadores() && casillas[i][j].obtenerJugadores()[0] == nombreJugador) {
-                                x = i;
-                                y = j;
-                                break;
-                            }
-                        }
-                        if (x != -1) break;
-                    }
+    bool verificarFinJuego() {
+    // Verificar si algún equipo pierde porque todos sus jugadores están muertos
+    for (const auto& equipo : equipos) {
+        bool todosMuertos = true;
+        for (const auto& jugador : equipo.obtenerJugadores()) {
+            if (jugador.getNivelVida() > 0) {
+                todosMuertos = false;
+                break;
+            }
+        }
+        if (todosMuertos) {
+            cout << "El equipo " << equipo.obtenerColor() << " ha perdido porque todos sus jugadores están muertos.\n";
+            return true;
+        }
+    }
 
-                    if (x == -1 || y == -1) {
-                        cout << "Jugador no encontrado en el tablero.\n";
-                        return;
-                    }
+    // Verificar si todos los jugadores de un equipo están en sus banderas
+    for (int i = 0; i < equipos.size(); ++i) {
+        bool todosEnBandera = true;
+        const auto& equipo = equipos[i];
+        for (const auto& jugador : equipo.obtenerJugadores()) {
+            bool enBandera = false;
+            for (int fila = 0; fila < filas; ++fila) {
+                int columnaBandera = (i == 0) ? 0 : columnas - 1;
+                if (find(casillas[fila][columnaBandera].obtenerJugadores().begin(),
+                         casillas[fila][columnaBandera].obtenerJugadores().end(),
+                         jugador.obtenerNombre()) != casillas[fila][columnaBandera].obtenerJugadores().end()) {
+                    enBandera = true;
+                    break;
+                }
+            }
+            if (!enBandera) {
+                todosEnBandera = false;
+                break;
+            }
+        }
+        if (todosEnBandera) {
+            cout << "El equipo " << equipo.obtenerColor() << " ha ganado porque todos sus jugadores están en sus banderas.\n";
+            return true;
+        }
+    }
 
-                    // Determinar la nueva posición según la dirección
-                    if (direccion == "arriba" && x > 0) {
-                        casillas[x][y].removerJugador(nombreJugador);
-                        casillas[x - 1][y].agregarJugador(nombreJugador);
-                    } else if (direccion == "abajo" && x < filas - 1) {
-                        casillas[x][y].removerJugador(nombreJugador);
-                        casillas[x + 1][y].agregarJugador(nombreJugador);
-                    } else if (direccion == "izquierda" && y > 0) {
-                        casillas[x][y].removerJugador(nombreJugador);
-                        casillas[x][y - 1].agregarJugador(nombreJugador);
-                    } else if (direccion == "derecha" && y < columnas - 1) {
-                        casillas[x][y].removerJugador(nombreJugador);
-                        casillas[x][y + 1].agregarJugador(nombreJugador);
-                    } else {
-                        cout << "Movimiento inválido.\n";
-                    }
-                    return;
+    // Verificar si algún jugador alcanza la bandera del equipo contrario
+    for (int i = 0; i < equipos.size(); ++i) {
+        const auto& equipo = equipos[i];
+        int columnaBanderaContraria = (i == 0) ? columnas - 1 : 0;
+        for (const auto& jugador : equipo.obtenerJugadores()) {
+            for (int fila = 0; fila < filas; ++fila) {
+                if (find(casillas[fila][columnaBanderaContraria].obtenerJugadores().begin(),
+                         casillas[fila][columnaBanderaContraria].obtenerJugadores().end(),
+                         jugador.obtenerNombre()) != casillas[fila][columnaBanderaContraria].obtenerJugadores().end()) {
+                    cout << "El jugador " << jugador.obtenerNombre() << " del equipo " << equipo.obtenerColor()
+                         << " ha ganado al alcanzar la bandera del equipo contrario.\n";
+                    return true;
                 }
             }
         }
     }
 
-    // Atacar a otro jugador
+    // Si no se cumple ninguna condición de fin de juego
+    return false;
+}
+
+
     void atacar(string atacante, string objetivo) {
         // Implementación de ataque con probabilidades según puntería
         for (auto& equipo : equipos) {
@@ -399,71 +414,132 @@ public:
     }
 };
 
+// Clase Turno
+class Turno {
+private:
+    int turnoActual; // 1 o 2 (equipo actual)
+
+public:
+    // Constructor
+    Turno() : turnoActual(1) {} // Inicia con el equipo 1
+
+    // Obtener el turno actual
+    int getTurnoActual() const {
+        return turnoActual;
+    }
+
+    // Cambiar de turno
+    void cambiarTurno() {
+        turnoActual = (turnoActual == 1) ? 2 : 1;
+    }
+
+    // Obtener el equipo actual en formato 'X' o 'O'
+    char getEquipoActual() const {
+        return (turnoActual == 1) ? 'X' : 'O';
+    }
+};
+
 int main() {
     srand(time(0));
 
-    // Menú de opciones
-    cout << "Selecciona una opcion para el tablero:\n";
-    cout << "1. Tablero aleatorio entre 3x4 y 10x10\n";
-    cout << "2. Tablero estandar de 7x4\n";
-    cout << "Opcion: ";
+    // Preguntar al usuario por el modo de juego
+    string modoJuego;
+    cout << "Selecciona el modo de juego (aleatorio/estándar): ";
+    cin >> modoJuego;
 
-    int opcion;
-    cin >> opcion;
+    // Crear el campo de batalla
+    int filas, columnas;
+    int jugadoresPorEquipo;
 
-    campoBatalla* juego = nullptr;
-
-    if (opcion == 1) {
-        // Generar tamaño aleatorio para el tablero entre 3x4 y 10x10
-        int filas = rand() % 8 + 3;   // Genera un número entre 3 y 10
-        int columnas = rand() % 7 + 4; // Genera un número entre 4 y 10
-        juego = new campoBatalla(filas, columnas);
-
-        cout << "Tablero generado aleatoriamente de " << filas << "x" << columnas << endl;
-    } else if (opcion == 2) {
-        // Tablero estándar de 7x4
-        juego = new campoBatalla(7, 4);
-        cout << "Tablero estándar de 7x4 creado.\n";
+    if (modoJuego == "aleatorio") {
+        filas = rand() % 8 + 3; // Filas entre 3 y 10
+        jugadoresPorEquipo = rand() % 5 + 1; // Entre 1 y 5 jugadores por equipo
+        columnas = rand() % 7 + 4; // Columnas entre 4 y 10
+        cout << "Modo aleatorio seleccionado. Tamaño del tablero: " << filas << "x" << columnas << ". Jugadores por equipo: " << jugadoresPorEquipo << endl;
     } else {
-        cout << "Opcion no valida. Por favor selecciona 1 o 2.\n";
-        return 1;  // Salir si la opción es inválida
+        cout << "Selecciona el tamaño del tablero (filas y columnas):\n";
+        cout << "Filas (3-10): ";
+        cin >> filas;
+        cout << "Columnas (4-10): ";
+        cin >> columnas;
+        cout << "Ingresa la cantidad de jugadores por equipo: ";
+        cin >> jugadoresPorEquipo;
     }
 
-    // Definir los colores de los equipos
-    vector<string> colores = {"Rojo", "Azul"};
+    try {
+        CampoBatalla batalla(filas, columnas);
 
-    // Crear equipos y asignar jugadores
-    juego->agregarEquipos(colores, 2); // Por ejemplo, dos jugadores por equipo
+        // Agregar equipos al campo de batalla
+        vector<string> colores = {"Azul", "Rojo"};
+        batalla.agregarEquipos(colores, jugadoresPorEquipo);
 
-    // Colocar equipos en el tablero
-    juego->colocarEquipos();
+        // Colocar los equipos y banderas en el tablero
+        batalla.colocarEquipos();
+        batalla.colocarBanderas();
 
-    // Colocar las banderas
-    juego->colocarBanderas();
+        // Mostrar el tablero y equipos iniciales
+        batalla.imprimirTablero();
+        batalla.mostrarEquipos();
 
-    // Verificar si el juego está listo
-    if (!juego->verificarInicioJuego()) {
-        return 1;  // Si el inicio del juego falla, salimos
+        // Verificar que el juego haya iniciado correctamente
+        if (!batalla.verificarInicioJuego()) {
+            return 1;
+        }
+
+        // Ciclo principal del juego
+        Turno turno;
+        bool juegoTerminado = false;
+        while (!juegoTerminado) {
+            cout << "\nTurno del equipo: " << (turno.getEquipoActual() == 'X' ? "Azul" : "Rojo") << endl;
+
+            // Mostrar el estado del tablero
+            batalla.imprimirTablero();
+
+            // Realizar movimiento o ataque
+            string accion;
+            cout << "Selecciona accion (mover/atacar): ";
+            cin >> accion;
+
+            if (accion == "mover") {
+                string nombreJugador;
+                int nuevaX, nuevaY;
+                cout << "Nombre del jugador a mover: ";
+                cin >> nombreJugador;
+                cout << "Nueva posicion (fila columna): ";
+                cin >> nuevaX >> nuevaY;
+
+                if (batalla.moverJugador(nombreJugador, nuevaX, nuevaY)) {
+                    cout << "Jugador " << nombreJugador << " movido exitosamente.\n";
+                } else {
+                    cout << "Movimiento invalido.\n";
+                }
+            } else if (accion == "atacar") {
+                string atacante, objetivo;
+                cout << "Nombre del atacante: ";
+                cin >> atacante;
+                cout << "Nombre del objetivo: ";
+                cin >> objetivo;
+
+                batalla.atacar(atacante, objetivo);
+            } else {
+                cout << "Accion no valida.\n";
+            }
+
+            // Verificar si el juego ha terminado
+    if (batalla.verificarFinJuego()) {
+        cout << "¡El juego ha terminado!" << endl;
+        juegoTerminado = true;
+        break; // Salir del ciclo si el juego termina
     }
 
-    // Mostrar el tablero
-    juego->imprimirTablero();
+            // Cambiar el turno
+            turno.cambiarTurno();
+        }
 
-    // Mostrar los equipos
-    juego->mostrarEquipos();
-
-    // Iniciar el juego con ejemplos de movimiento y ataques
-    string jugadorAtacante = "R1";  // Suponiendo que el jugador "R1" es el atacante
-    string jugadorObjetivo = "A1";  // Suponiendo que el jugador "A1" es el objetivo
-
-    // Mover a un jugador (por ejemplo, "R1" mueve hacia la derecha)
-    juego->mover(jugadorAtacante, "derecha");
-
-    // Atacar a otro jugador
-    juego->atacar(jugadorAtacante, jugadorObjetivo);
-
-    // Limpiar memoria
-    delete juego;
+    } catch (const invalid_argument& e) {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
 
     return 0;
 }
