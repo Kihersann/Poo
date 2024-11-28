@@ -19,6 +19,7 @@ private:
     int x, y;
 
 public:
+
     map<string, float> estadisticasPunteria;
 
     Jugador(string _nombre, string _tipo, bool _rapido)
@@ -199,7 +200,7 @@ private:
 public:
     CampoBatalla(int m, int n) {
         if (m < 3 || m > 10 || n < 4 || n > 10) {
-            throw invalid_argument("El tamano del tablero debe ser de 3x4 a 10x10.");
+            throw invalid_argument("El tamaño del tablero debe ser de 3x4 a 10x10.");
         }
         filas = m;
         columnas = n + 2; // Aumentamos 2 columnas para las banderas
@@ -276,7 +277,7 @@ public:
     // Método para mover un jugador a una nueva posición
     bool moverJugador(const string& nombreJugador, int nuevaX, int nuevaY) {
         if (nuevaX < 0 || nuevaX >= filas || nuevaY < 0 || nuevaY >= columnas) {
-            cout << "Movimiento invalido: fuera de los limites del tablero." << endl;
+            cout << "Movimiento inválido: fuera de los límites del tablero." << endl;
             return false;
         }
 
@@ -287,7 +288,7 @@ public:
                     int actualY = jugador.obtenerY();
 
                     if (casillas[nuevaX][nuevaY].tieneJugadores()) {
-                        cout << "Movimiento invalido: la casilla esta ocupada." << endl;
+                        cout << "Movimiento inválido: la casilla está ocupada." << endl;
                         return false;
                     }
 
@@ -325,11 +326,11 @@ public:
         }
 
         if (!banderasColocadas) {
-            cout << "Error: Las banderas no estan colocadas correctamente.\n";
+            cout << "Error: Las banderas no están colocadas correctamente.\n";
             return false;
         }
 
-        cout << "El juego ha iniciado correctamente!\n";
+        cout << "¡El juego ha iniciado correctamente!\n";
         return true;
     }
 
@@ -344,7 +345,7 @@ public:
             }
         }
         if (todosMuertos) {
-            cout << "El equipo " << equipo.obtenerColor() << " ha perdido porque todos sus jugadores estan muertos.\n";
+            cout << "El equipo " << equipo.obtenerColor() << " ha perdido porque todos sus jugadores están muertos.\n";
             return true;
         }
     }
@@ -370,7 +371,7 @@ public:
             }
         }
         if (todosEnBandera) {
-            cout << "El equipo " << equipo.obtenerColor() << " ha ganado porque todos sus jugadores estan en sus banderas.\n";
+            cout << "El equipo " << equipo.obtenerColor() << " ha ganado porque todos sus jugadores están en sus banderas.\n";
             return true;
         }
     }
@@ -422,12 +423,12 @@ public:
                     cout << atacante << " fallo el ataque a " << objetivo << ".\n";
                 }
                 return; // Salir después de procesar el ataque
+                }
             }
         }
     }
-}
 
-
+};
 
 // Clase Turno
 class Turno {
@@ -542,7 +543,7 @@ int main() {
 
             // Verificar si el juego ha terminado
     if (batalla.verificarFinJuego()) {
-        cout << "El juego ha terminado!" << endl;
+        cout << "¡El juego ha terminado!" << endl;
         juegoTerminado = true;
         break; // Salir del ciclo si el juego termina
     }
@@ -558,4 +559,3 @@ int main() {
 
     return 0;
 }
-};
